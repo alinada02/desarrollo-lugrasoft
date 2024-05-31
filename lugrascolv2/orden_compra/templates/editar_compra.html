@@ -1,0 +1,191 @@
+{% extends "dashboard.html" %}
+{% load static%}
+
+{%block titulohoja%}
+	<h2 class="titulo">Orden de Compra</h2>
+{%endblock%}
+
+
+{% block title %}
+	<title>Orden de Compra</title>
+{% endblock title %}
+{% block areatrabajo %}
+	<link rel="stylesheet" href="{%static 'prueba7.css' %}">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+	<h4>Proveedor</h4>
+    {% for objeto in objetos%}
+	<div class="container">
+		<div class="form-container">
+			<div class="left-column">
+				<div class="selector-container">
+					<div class="campofactura">
+						<input type="int" id="numeroFactura" required placeholder="Ingrese el número de factura"value="{{ objeto.id_compra.id_compra }}">
+					</div>
+					<div class="campofecha">
+						<input type="date" id="fechaCreacion" value="{{ objeto.fecha_ingreso_str}}">
+					</div>
+				</div>
+				<div class="selector-container">
+                    
+					<select class="selector" name="proveedor" id="proveedor">
+                        {% for prov in proveedores %}
+                            {% if prov.id_proveedor == objeto.id_proveedor.id_proveedor %}
+                            <option value="{{ prov.id_proveedor }}" selected data-nit="{{ prov.nit }}" data-direc="{{ prov.direccion }}" data-tel="{{ prov.telefono }}">{{ prov.nombre_proveedor }}</option>
+						<!-- Itera sobre tus datos de proveedores -->
+                            {% else %}
+                                <option value="{{ prov.id_proveedor }}" data-nit="{{ prov.nit }}" data-direc="{{ prov.direccion }}" data-tel="{{ prov.telefono }}">{{ prov.nombre_proveedor }}</option>
+                            {% endif %}
+                        {% endfor %}
+					</select>
+					<button id="addprov" class="addprov" >+</button>
+				</div>
+				
+				<div class="selector-container">
+					<select class="selector" name="producto" id="producto">
+                        {% for producto in productos %}
+						<option value="{{ producto.id }}" data-costo_unitario="{{ producto.costo_unitario }}">Producto</option>
+                        {% endfor %}
+					</select>
+					<button id="addprod" class="addprod">+</button>
+				</div>
+			</div>
+			<div class="right-column">
+				<div class="info">
+					<div id="nitproveedor">{{objeto.id_proveedor}}</div>
+					<div id="direccion">{{objeto.direccion}}</div>
+					<div id="telefono">{{objeto.telefono}}</div>
+				</div>
+				<div id="totalFactura">
+					Total Factura
+				</div>
+				<div>
+					<button id="enviarFormularioBtn">Guardar Orden</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	
+	<div class= "tabla">
+		<table class="table" id="tabla-formulario">
+			<thead class="table">
+				<tr class="encabezado">
+					<td>ID Producto</td>
+					<td>Nombre</td>
+					<td> Cantidad</td>
+					<td>Costo Unitario</td>
+					<td>Total</td>
+					<td>Fecha de ingreso</td>
+					<td><select name="unidad" id="unidad">
+						<option value="">Unidad</option>
+						<option value="">Kg</option>
+						<option value="">Gr</option>
+						<option value="">Galon</option>
+					</select></td>
+					<td> Proveedor</td>
+					<td>Compra #</td>
+					<td>Opciones</td>
+				</tr>
+			</thead>
+			<tbody>
+                <td>{{objeto.cod_inventario.cod_inventario}}</td>
+                <td>{{objeto.nombre_mp}}</td>
+                <td><input type="number" value="{{objeto.cant_mp}}"></td>
+                <td><input type="number" value="{{objeto.costo_unitario}}"></td>
+                <td></td>
+                <td>{{objeto.fecha_ingreso}}</td>
+                <td>{{objeto.unidad_medida}}</td>
+                <td>{{objeto.id_proveedor}}</td>
+                <td>{{objeto.id_compra.id_compra}}</td>
+                <td><button class="eliminar-btn"><i class="bi bi-trash3-fill"></i></button></td>
+			</tbody>
+		</table>	
+		
+	</div>
+	{%endfor%}
+
+{% endblock  %}	
+
+
+{% block javascrips %}
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+<script>
+    $(document).ready(function() {
+        // Al hacer clic en el botón eliminar
+        $('.eliminar-btn').click(function() {
+            // Eliminar la fila correspondiente
+            $(this).closest('tr').remove();
+        });
+    });
+    $(document).ready(function() {
+        var proveedorSeleccionado = $('#proveedor').find('option:selected');
+        var proveedorId = proveedorSeleccionado.val();
+        var proveedorNit = proveedorSeleccionado.data('nit');
+        
+        console.log('ID:', proveedorId);
+        
+
+        // Hacer una solicitud AJAX para obtener los productos del proveedor estático
+        $.ajax({
+            url: "{% url 'obtener' %}",
+            type: 'GET',
+            data: {
+                proveedor_id: proveedorId
+            },
+            success: function(data) {
+                // Limpiar el selector de productos
+                $('#producto').empty();
+                // Agregar las opciones de productos obtenidas
+                $.each(data, function(index, producto) {
+                    $('#producto').append($('<option>', {
+                        value: producto.id,
+                        text: producto.nombre,
+                    }));
+                });
+            },
+            error: function(xhr, status, error) {
+                console.error('Error al obtener productos:', error);
+            }
+        });
+    });
+    $(document).ready(function() {
+        // Al hacer clic en el botón eliminar
+        $('.eliminar-btn').click(function() {
+            // Eliminar la fila correspondiente
+            $(this).closest('tr').remove();
+        });
+
+        // Al seleccionar un producto
+        $('#producto').change(function() {
+            // Obtener los datos del producto seleccionado
+            var productoSeleccionado = $(this).find('option:selected');
+            var idProducto = productoSeleccionado.val();
+            var nombreProducto = productoSeleccionado.text();
+            var costoUnitario = productoSeleccionado.data('costo_unitario');
+            var fechaIngreso = $('#fechaCreacion').val();
+            var id_compra = $('#numeroFactura').val();
+            var proveedorSeleccionado = $('#proveedor').find('option:selected');
+            var proveedorId = proveedorSeleccionado.val();
+            
+
+            // Crear una nueva fila para la tabla
+            var nuevaFila = '<tr>' +
+                                '<td>' + idProducto + '</td>' +
+                                '<td>' + nombreProducto + '</td>' +
+                                '<td><input type="number" class="cantidad"></td>' +
+                                '<td><input type="number" class="costo_unitario"> </td>' +
+                                '<td></td>' +
+                                '<td>' + fechaIngreso + '</td>' +
+                                '<td><input type="text" class="unidad_medida"> </td>' +
+                                '<td>'+ proveedorId +'</td>' +
+                                '<td>'+ id_compra +'</td>' +
+                                '<td><button class="eliminar-btn"><i class="bi bi-trash3-fill"></i></button></td>' +
+                            '</tr>';
+
+            // Agregar la nueva fila a la tabla
+            $('#tabla-formulario tbody').append(nuevaFila);
+        });
+    });
+</script>
+{%endblock%}

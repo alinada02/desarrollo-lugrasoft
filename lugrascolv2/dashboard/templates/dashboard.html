@@ -1,0 +1,73 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	{% block title %}
+		<title>Dashboard</title>
+	{% endblock title %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'base2.css'%}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+	
+</head>
+<body>
+    <div class="sidebar">
+        <div class="logo">
+            <h1>Lugrasoft</h1>
+            <img src="{% static 'logo.png'%}" height="100" width="100" class="img">
+        </div>
+        <nav class="nav">
+            <ul class="menu">
+                <li><a href="#"><i class="bi bi-graph-up-arrow"></i>  Facturación</a></li>
+                <li><a href="#"><i class="bi bi-gear"></i> Produccion</a></li>
+                <li><a href="{% url 'inv'%}"><i class="bi bi-boxes"></i> Inventario</a></li>
+                <li><a href="#"><i class="bi bi-files"></i> Reportes</a></li>
+                <li><a href="{% url 'formula'%}"><i class="bi bi-eyedropper"></i></i> Formulas</a>
+                    <ul class="submenu">
+                        <li><a href="{% url 'verformula' %}"><i class="bi bi-list"></i>Formulas</a></li>
+                        <li><a href="{% url 'formula'%}"><i class="bi bi-cart-plus"></i>Agregar Formula</a></li>
+                    </ul>
+                <li><a href="#"><i class="bi bi-person-check-fill"></i> Clientes</a></li>
+                <li><a href=""><i class="bi bi-cart4"></i> Orden de compra</a>
+                    <ul class="submenu">
+                        <li><a href="{% url 'compras'%}"><i class="bi bi-list"></i> Compras</a></li>
+                        <li><a href="{% url 'orden'%}"><i class="bi bi-cart-plus"></i> Agregar compras</a></li>
+                    </ul>
+                </li>
+                <li> <a href="#"><i class="bi bi-people"></i>  Usuarios</a></li>
+                <li> <a href="#"><i class="bi bi-sliders2-vertical"></i>  Seguridad</a></li>
+                <li><a href="{% url 'ver-proveedor' %}"><i class="bi bi-person-rolodex"></i>  Proveedores</a></li>
+                <li class="salir"><a href="{% url 'exit'%}"><i class="bi bi-escape"></i>Salir</a></li>
+            </ul>
+        </nav>
+    </div>
+    <div class="content">
+        <!-- Contenido principal aquí -->
+		{% block titulohoja %}
+        <h2 class="titulo">Dashboard</h2>
+		{% endblock titulohoja %}
+    </div>
+
+    <div class="content2">
+		{% block areatrabajo%}
+
+		{% endblock areatrabajo%}
+
+    </div>
+
+
+	{% block javascrips %}
+
+
+	{% endblock javascrips %}
+</body>
+</html>
+
+
+
+
+
+
+
+

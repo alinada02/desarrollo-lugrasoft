@@ -1,0 +1,291 @@
+{% extends "dashboard.html" %}
+{% load static%}
+
+{%block title%}
+<title>Compras</title>
+{%endblock%}
+
+
+{%block titulohoja%}
+    <h2 class="titulo">Compras</h2>
+{%endblock%}
+
+{% block areatrabajo %}
+<link rel="stylesheet" href="{% static 'compras.css'%}">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+
+<div class= "tabla">
+    <table class="table" id="tabla-formulario">
+        <thead class="table">
+            <tr class="encabezado">
+                <td>Id compra</td>
+                <td> total factura</td>
+                <td>Fecha de ingreso</td>
+                <td>Opciones</td>
+            </tr>
+        </thead>
+        <tbody>
+            {% for dato in datos_tabla %}
+            <tr>
+                <td>{{dato.id_compra}}</td>
+                <td>{{dato.total_factura}}</td>
+                <td>{{dato.fecha_ingreso}}</td>
+                <td>
+                    <a href="{% url 'verOrden' dato.id_compra %}" class="open-modal"  data-id="{{ dato.id_compra }}"><i class="bi bi-eye"></i></a>
+                    {% if not dato.compra.estado %}
+                    <a href="{% url 'actualizar-inventario' dato.id_compra %}" class="open-modal2"  data-id="{{ dato.id_compra }}"><i class="bi bi-send-check"></i></a>
+                    {%endif%}
+                    {% if not dato.compra.estado %}
+                    <a href="{% url 'editar' dato.id_compra%}" class="open-modal3"  data-id="{{ dato.id_compra }}"><i class="bi bi-pencil-square"></i></a>
+                    {%endif%}       
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>	
+    
+</div>
+
+<!-- Modal -->
+<div id="miModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Detalles de la Compra</h2>
+        <div class="tabla">
+            <table class="table" id="tabla-modal">
+                <thead class="table">
+                    <tr class="encabezado">
+                        <td>Id Producto</td>
+                        <td>Producto</td>
+                        <td> Cantidad</td>
+                        <td>Precio Unitario</td>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Contenido del modal -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+
+
+
+{% block javascrips %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+
+
+        var modal = document.getElementById('miModal');
+        var links = document.querySelectorAll('.open-modal');
+        var enviar = document.querySelectorAll('.open-modal2');
+        var editar = document.querySelectorAll('.open-modal3');
+        var span = document.querySelector('.close');
+
+
+
+
+
+        var modal = document.getElementById('miModal');
+        var links = document.querySelectorAll('.open-modal');
+        var enviar = document.querySelectorAll('.open-modal2');
+        var editar = document.querySelectorAll('.open-modal3');
+        var span = document.querySelector('.close');
+
+        links.forEach(function(link) {
+            link.onclick = function(event) {
+                // Prevenir el comportamiento predeterminado del enlace
+                event.preventDefault();
+
+                // Obtener el ID de compra del atributo de datos
+                var idCompra = this.dataset.id;
+
+                // Realizar la solicitud AJAX al backend para obtener los elementos por orden
+                $.ajax({
+                    url: "{%url 'verOrden' 0%}".replace('0', idCompra),
+                    type: 'GET',
+                    success: function(response) {
+                        // Manejar la respuesta del backend y mostrar los elementos en la tabla modal
+                        var elementos = response.elementos;
+                        var tbody = document.getElementById('tabla-modal').getElementsByTagName('tbody')[0];
+                        tbody.innerHTML = ''; // Limpiar el cuerpo de la tabla
+
+                        elementos.forEach(function(elemento) {
+                            var row = tbody.insertRow();
+                            var cellProducto = row.insertCell(0);
+                            var cellNombre = row.insertCell(1);
+                            var cellCantidad = row.insertCell(2);
+                            var cellCostoUnitario = row.insertCell(3);
+
+                            cellProducto.innerHTML = elemento.cod_inventario;
+                            cellNombre.innerHTML = elemento.nombre_mp;
+                            cellCantidad.innerHTML = elemento.cant_mp;
+                            cellCostoUnitario.innerHTML = elemento.costo_unitario;
+                            // Agrega más celdas según sea necesario
+                        });
+
+                        // Aquí puedes hacer lo que necesites con el ID de compra, como mostrarlo en el modal
+                        console.log("ID de compra:", idCompra);
+
+                        // Mostrar el modal
+                        modal.style.display = 'block';
+                    },
+                    error: function(xhr, status, error) {
+                        // Manejar errores de la solicitud AJAX
+                        console.error(xhr.responseText);
+                    }
+                });
+            };
+        });
+
+        // Cerrar el modal cuando se haga clic en el botón "Cerrar"
+        span.onclick = function() {
+            modal.style.display = 'none';
+        };
+
+        // Cerrar el modal cuando se haga clic fuera de él
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        };
+
+// Funcionalidad de enviar a inventario
+        enviar.forEach(function(link) {
+            link.onclick = function(event) {
+                // Prevenir el comportamiento predeterminado del enlace
+                event.preventDefault();
+
+                // Obtener el ID de compra del atributo de datos
+                var idCompra = this.dataset.id;
+                // Guardar el enlace para poder ocultarlo más tarde
+                var currentLink = this;
+                editLink = document.querySelector('.open-modal3[data-id="' + idCompra + '"]');
+
+                // Realizar la solicitud AJAX al backend para obtener los elementos por orden
+                $.ajax({
+                    url: "{%url 'verOrden' 0%}".replace('0', idCompra),
+                    type: 'GET',
+                    success: function(response) {
+                        // Manejar la respuesta del backend y mostrar los elementos en la tabla modal
+                        var elementos = response.elementos;
+                        var tbody = document.getElementById('tabla-modal').getElementsByTagName('tbody')[0];
+                        tbody.innerHTML = ''; // Limpiar el cuerpo de la tabla
+
+                        elementos.forEach(function(elemento) {
+                            var row = tbody.insertRow();
+                            var cellProducto = row.insertCell(0);
+                            var cellNombre = row.insertCell(1);
+                            var cellCantidad = row.insertCell(2);
+                            var cellCostoUnitario = row.insertCell(3);
+
+                            cellProducto.innerHTML = elemento.cod_inventario;
+                            cellNombre.innerHTML = elemento.nombre_mp;
+                            cellCantidad.innerHTML = elemento.cant_mp;
+                            cellCostoUnitario.innerHTML = elemento.costo_unitario;
+                            // Agrega más celdas según sea necesario
+                        });
+                        // Crear y agregar un botón para enviar a inventario en el pie del modal
+                        var modalContent = document.querySelector('.modal-content');
+                        var enviarAInventarioButton = document.createElement('button');
+                        enviarAInventarioButton.textContent = 'Enviar a inventario';
+                        enviarAInventarioButton.className = 'btn btn-primary'; 
+
+
+                        enviarAInventarioButton.addEventListener('click', function() {
+                            // Realizar la solicitud AJAX para enviar a inventario
+                            $.ajax({
+                                url: "{% url 'actualizar-inventario' 0 %}".replace('0', idCompra),
+                                headers: { "X-CSRFToken": getCookie("csrftoken") },
+                                type: 'POST',
+                                data: {
+                                    id_compra: idCompra  // Enviar el ID de compra al backend
+                                },
+                                success: function(response) {
+                                    // Manejar la respuesta del backend
+                                    // Por ejemplo, mostrar un mensaje de éxito o realizar otras acciones necesarias
+                                },
+                                error: function(xhr, status, error) {
+                                    // Manejar errores de la solicitud AJAX
+                                    console.error(xhr.responseText);
+                                }
+                            });
+                             // Cerrar el modal
+                            modal.style.display = 'none';
+
+                            console.log(idCompra)
+
+                            $.ajax({
+                                url: "{% url 'actualizar-estado' 0 %}".replace('0', idCompra), // Reemplaza con la URL adecuada para actualizar el estado
+                                type: 'POST',
+                                data: {
+                                    id_compra: idCompra,
+                                    estado: true  // Cambia el estado a true
+                                },
+                                success: function(response) {
+                                    // Manejar la respuesta del backend
+                                    console.log("Estado actualizado con éxito a true");
+                                },
+                                error: function(xhr, status, error) {
+                                    // Manejar errores de la solicitud AJAX
+                                    console.error(xhr.responseText);
+                                }
+                            });
+
+
+
+
+                            // Ocultar el enlace que fue usado para abrir este modal
+                            currentLink.style.display = 'none';
+
+                              // También ocultar el enlace de edición
+                            if (editLink) {
+                                editLink.style.display = 'none';
+                            }
+
+                        });
+
+                        var existingButton = modalContent.querySelector('.btn-primary');
+                        if (existingButton) {
+                            modalContent.removeChild(existingButton);
+                        }
+                        modalContent.appendChild(enviarAInventarioButton);
+
+                        // Mostrar el modal
+                        
+                        modal.style.display = 'block';
+                    },
+                    error: function(xhr, status, error) {
+                        // Manejar errores de la solicitud AJAX
+                        console.error(xhr.responseText);
+                    }
+                });
+            };
+        });
+    });
+
+
+
+function getCookie(name) {
+var cookieValue = null;
+if (document.cookie && document.cookie !== '') {
+    var cookies = document.cookie.split(';');
+    for (var i = 0; i < cookies.length; i++) {
+        var cookie = cookies[i].trim();
+        // Verificar si la cookie comienza con el nombre deseado
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+        }
+    }
+}
+return cookieValue;
+}
+</script>
+{% endblock %}
+
+

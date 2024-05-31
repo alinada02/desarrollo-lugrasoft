@@ -1,0 +1,30 @@
+{%load static%}
+{% load crispy_forms_tags %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inicio Lugrascol</title>
+    <link rel="stylesheet" href="{% static 'inicio.css' %}">
+</head>
+<body>
+    <h1>Lugrascol</h1>
+    <h6>Lubricantes y Grasas de Colombia</h6>
+    
+    <div><img class="logo", src="{% static 'logo.png'%}" alt=""></div>
+    <div>
+        <form action="", method="POST">
+            {% csrf_token %}
+            <div class="crispy">{{ form | crispy}}</div>
+            <br>
+            <button type="submit">iniciar sesion</button>
+        </form>
+        <div>
+            <br>
+            <br>
+            <a href="">Olvido su Contraseña?</a>
+        </div>
+    </div>
+    
+</body>

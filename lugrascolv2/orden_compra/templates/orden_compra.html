@@ -1,0 +1,161 @@
+{% extends "dashboard.html" %}
+{% load static%}
+
+{%block titulohoja%}
+	<h2 class="titulo">Orden de Compra</h2>
+{%endblock%}
+
+
+{% block title %}
+	<title>Orden de Compra</title>
+{% endblock title %}
+{% block areatrabajo %}
+	<link rel="stylesheet" href="{%static 'prueba5.css' %}">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+	<h4>Proveedor</h4>
+
+	<div class="container">
+		<div class="form-container">
+			<div class="left-column">
+				<div class="selector-container">
+					<div class="campofactura">
+						<input type="int" id="numeroFactura" required placeholder="Ingrese el número de factura">
+					</div>
+					<div class="campofecha">
+						<input type="date" id="fechaCreacion">
+					</div>
+				</div>
+				<div class="selector-container">
+					<select class="selector" name="proveedor" id="proveedor">
+						<option value="">Proveedor</option>
+						<!-- Itera sobre tus datos de proveedores -->
+						{% for prov in proveedor %}
+							<option value="{{ prov.id_proveedor }}" data-nit="{{ prov.id_proveedor }}" data-direc="{{ prov.direccion }}" data-tel="{{ prov.telefono }}">{{ prov.nombre_proveedor }}</option>
+						{% endfor %}
+					</select>
+					<button id="addprov" class="addprov" >+</button>
+				</div>
+				
+				<div class="selector-container">
+					<select class="selector" name="producto" id="producto">
+						<option value="">Producto</option>
+					</select>
+					<button id="addprod" class="addprod">+</button>
+				</div>
+			</div>
+			<div class="right-column">
+				<div class="info">
+					<div id="nitproveedor">NIT</div>
+					<div id="direccion">DIRECCION</div>
+					<div id="telefono">TELEFONO</div>
+				</div>
+				<div id="totalFactura">
+					Total Factura
+				</div>
+				<div>
+					<button id="enviarFormularioBtn">Guardar Orden</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div id="miModal" class="modal">
+		<div class="modal-content">
+			<span class="close">&times;</span>
+			<div class="form-container2">
+				<form action="{%url 'addprov'%}" method="post" class="form-box" onsubmit="return confirmarEnvio()">
+					{% csrf_token %}
+				<h2>Agregar Proveedor nuevo</h2>
+				<div class="form-group">
+					<label for="nit">NIT:</label>
+					<input type="number" id="nit" name="nit" required>
+				</div>
+				<div class="form-group">
+					<label for="name">Nombre:</label>
+					<input type="text" id="nombreproveedor" name="name" required>
+				</div>
+				<div class="form-group">
+					<label for="direccion">Dirección:</label>
+					<input type="text" id="direccion" name="direccion" required>
+				</div>
+				<div class="form-group">
+					<label for="telefono">Teléfono:</label>
+					<input type="number" id="telefono" name="telefono" required>
+				</div>
+					<button type="submit">Enviar</button>
+				</form>
+			</div>
+			{% if proveedor_existente %}
+            <script>
+                alert("¡El proveedor con este NIT ya existe en la base de datos!");
+            </script>
+        {% endif %}
+		</div>
+	</div>
+
+	<div id="miModal2" class="modal">
+		<div class="modal-content">
+			<span class="closemodal2">&times;</span>
+			<div class="form-container2">
+				<form action="{% url 'guardar'%}" method="post" class="form-box" id="formulario">
+					{% csrf_token %}
+					<h2>Agregar Producto nuevo</h2>
+					<div class="form-group">
+						<label for="idproducto">Id Producto:</label>
+						<input type="number" id="identificador" name="identificador" required>
+					</div>
+					<div class="form-group">
+						<label for="nombreproducto">Nombre:</label>
+						<input type="text" id="nombre" name="nombre" required>
+					</div>
+					<div class="form-group">
+						<label for="nitproveedor">NIT Proveedor:</label>
+						<input type="number" id="provee" name="provee" required>
+					</div>
+					<button type="submit">Enviar</button>
+				</form>
+			</div>
+		</div>
+	</div>
+	
+	<div class= "tabla">
+		<table class="table" id="tabla-formulario">
+			<thead class="table">
+				<tr class="encabezado">
+					<td>ID Producto</td>
+					<td>Nombre</td>
+					<td> Cantidad</td>
+					<td>Costo Unitario</td>
+					<td>Total</td>
+					<td>Fecha de ingreso</td>
+					<td>Unidad de Medida</td>
+					<td> Proveedor</td>
+					<td>Compra #</td>
+					<td>Opciones</td>
+				</tr>
+			</thead>
+			<tbody>
+			</tbody>
+		</table>	
+		
+	</div>
+	
+
+{% endblock  %}	
+
+{% block javascrips %}
+<script src="{% static 'prueba9.js' %}"></script>
+
+
+
+<script>
+	var obtenerProductosURL = "{% url 'obtener' %}";
+</script>
+<script>
+	var nuevaOrden = "{% url 'nueva_orden' %}";
+	</script>
+{% endblock javascrips %}
+
+
+
+

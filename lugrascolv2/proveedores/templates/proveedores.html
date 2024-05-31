@@ -1,0 +1,177 @@
+{% extends "dashboard.html" %}
+{% load static%}
+
+{%block title%}
+<title>Proveedores</title>
+{%endblock%}
+
+
+{%block titulohoja%}
+    <h2 class="titulo">Compras</h2>
+{%endblock%}
+
+{% block areatrabajo %}
+
+<link rel="stylesheet" href="{%static 'proveedores2.css'%}">
+<div class= "tabla">
+    <table class="table" id="tabla-formulario">
+        <thead class="table">
+            <tr class="encabezado">
+                <td>Nit Proveedor</td>
+                <td> Nombre</td>
+                <td>Direccion</td>
+                <td>Telefono</td>
+                <td>Productos</td>
+            </tr>
+        </thead>
+        <tbody>
+            {% for proveedor in proveedores%}
+            <tr>
+                
+                <td>{{proveedor.id_proveedor}}</td>
+                <td>{{proveedor.nombre_proveedor}}</td>
+                <td>{{proveedor.direccion}}</td>
+                <td>{{proveedor.telefono}}</td>
+                <td><a href="" class="open-modal" data-modal-target="#viewModal{{ forloop.counter }}" data-proveedor-id="{{ proveedor.id_proveedor }}"><i class="bi bi-eye-fill"></i></a>
+
+                
+            </tr>
+            {%endfor%}
+        </tbody>
+    </table>	
+    
+</div>
+
+
+{% for proveedor in proveedores%}
+<!-- Modal para mostrar los productos asociados a un proveedor -->
+<div id="viewModal{{ forloop.counter }}" class="modal">
+    <div class="modal-content">
+        <span class="close-modal">&times;</span>
+        <h2>Productos por Proveedor</h2>
+        <!-- Tabla de productos asociados a este proveedor -->
+        <div class="compact-data-container">
+            <div class="tabla">
+                <table class="table" id="tabla-productos">
+                    <!-- Encabezados de la tabla -->
+                    <thead class="table">
+                        <tr class="encabezado">
+                            <td>ID Materia Prima</td>
+                            <td>Nombre</td>
+                            <td>Último Precio de Compra</td>
+                        </tr>
+                    </thead>
+                    <!-- Cuerpo de la tabla (se llenará dinámicamente con JavaScript) -->
+                    <tbody>
+                        <!-- Filas de productos se agregarán aquí -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>  
+{%endfor%}
+{%endblock%}
+
+
+
+{% block javascrips %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const openModalButtons = document.querySelectorAll('.open-modal');
+    const closeModalButtons = document.querySelectorAll('.close-modal');
+    const overlay = document.querySelector('.modal');
+
+    openModalButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const modal = document.querySelector(button.dataset.modalTarget);
+            openModal(modal);
+        });
+    });
+
+    closeModalButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const modal = button.closest('.modal');
+            closeModal(modal);
+        });
+    });
+
+    overlay.addEventListener('click', () => {
+        const modals = document.querySelectorAll('.modal');
+        modals.forEach(modal => {
+            closeModal(modal);
+        });
+    });
+
+    function openModal(modal) {
+        if (modal == null) return;
+        modal.style.display = 'block';
+    }
+
+    function closeModal(modal) {
+        if (modal == null) return;
+        modal.style.display = 'none';
+    }
+    // Aquí puedes agregar lógica para actualizar dinámicamente el contenido de la tabla de productos cuando se abre el modal
+    // Puedes usar AJAX para cargar los datos de los productos asociados al proveedor y luego actualizar la tabla
+
+    // Por ejemplo:
+    // 1. Haz una solicitud AJAX al servidor para obtener los productos asociados a un proveedor
+    // 2. Actualiza dinámicamente el contenido de la tabla de productos con los datos obtenidos de la respuesta AJAX
+});
+$(document).ready(function() {
+    // Escuchar el evento de clic en el enlace para abrir el modal y obtener los productos
+    $('.open-modal').click(function(event) {
+        event.preventDefault(); // Prevenir el comportamiento predeterminado del enlace
+
+        // Obtener el ID del proveedor del atributo data del enlace
+        var proveedorId = $(this).data('proveedor-id');
+        console.log('idproveedor', proveedorId)
+
+        // Realizar la solicitud AJAX para obtener los productos del proveedor
+        $.ajax({
+            url: "{% url 'obtener_productos' 0 %}".replace(0, proveedorId), // Reemplaza '/ruta/a/la/vista/' con la ruta correcta
+            type: 'GET',
+            dataType: 'json',
+            success: function(data) {
+                // Manejar la respuesta exitosa
+                console.log('estamos entrando a la solicitud')
+                console.log('Datos recibidos:', data);
+                // Limpiar la tabla de productos antes de agregar nuevos datos
+                $('#tabla-productos tbody').empty();
+
+                // Iterar sobre los datos de los productos y agregar filas a la tabla
+                $.each(data, function(index, producto) {
+                    var fila = '<tr>' +
+                        '<td>' + producto.id + '</td>' +
+                        '<td>' + producto.nombre + '</td>' +
+                        '<td>' + producto.costo_unitario + '</td>' +
+                        '</tr>';
+                    $('#tabla-productos tbody').append(fila);
+                });
+
+                // Abrir el modal
+                var modalId = $(event.target).data('modal-target');
+                $(modalId).show();
+            },
+            error: function(xhr, status, error) {
+                // Manejar errores de la solicitud AJAX
+                console.error('Error al obtener productos:', error);
+            }
+        });
+    });
+
+    // Escuchar el evento de clic en el botón para cerrar el modal
+    $('.close-modal').click(function() {
+        // Cerrar el modal
+        var modal = $(this).closest('.modal');
+        modal.hide();
+    });
+});
+
+
+
+</script>
+
+{%endblock%}

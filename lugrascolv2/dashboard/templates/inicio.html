@@ -1,0 +1,24 @@
+{%load static%}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inicio Lugrascol</title>
+    <link rel="stylesheet" href="{% static 'inicio.css' %}">
+</head>
+<body>
+    <h1>Lugrascol</h1>
+    <h6>Lubricantes y Grasas de Colombia</h6>
+    <div>
+        <img class="logo", src="static/logo.png" alt="">
+        <form action="{% url 'inicio' %}">
+        <button type="submit">iniciar Sesion</button>
+        
+            
+        </form>
+    </div>
+    
+    
+</body>
+</html>

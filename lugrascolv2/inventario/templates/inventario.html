@@ -1,0 +1,71 @@
+{% extends "dashboard.html" %}
+{% load static%}
+
+{% block title %}
+	<title>Inventario</title>
+{% endblock title %}
+{% block titulohoja%}
+	<h2 class="titulo">Inventario</h2>
+{% endblock titulohoja %}
+
+
+{% block areatrabajo %}
+<script src="{% static 'filtrar.js' %}"></script>
+
+<link rel="stylesheet" href="{% static 'tabla1.css' %}">
+
+<div class="sobretabla">
+	<div class="filtro">
+		<i class="bi bi-funnel-fill"></i>
+		<select name="filtro" id="filtro">filtrar
+			<option value="">Filtrar</option>
+			<option value="materias">Materias Primas</option>
+			<option value="P_terminados">Productos terminados</option>
+		</select>
+	</div>
+	<div class="ejuste">
+		<i class="bi bi-gear-fill"></i>
+		<a href="{% url 'ajuste'%}">Ajuste de entrada</a>
+	</div>
+	<div class="averias">
+		<i class="bi bi-wrench-adjustable"></i>
+		<a href="{% url 'averias'%}">Control de Averias</a>
+	</div>
+	<div class="kardex">
+		<i class="bi bi-diagram-3-fill"></i>
+		<a href="">Reconstruir Kardex</a>
+	</div>
+	<div class="exportar">
+		<i class="bi bi-file-earmark-x"></i>
+		<a href="">Exportar</a>
+	</div>
+</div>
+
+
+
+<div class= "tabla">
+	<table class="table">
+		<thead class="table">
+			<tr class="encabezado">
+				<td>ID Producto</td>
+				<td>Nombre</td>
+				<td> Cantidad</td>
+			</tr>
+		</thead>
+		<tbody>
+			{% for inv in inventario %}
+			<tr  data-tipo="{{ inv.tipo }}">
+				<td>{{inv.cod_inventario}}</td>
+				<td>{{inv.nombre}}</td>
+				<td>{{inv.cantidad}}</td>
+			</tr>
+			{% endfor %}
+		</tbody>
+	</table>	
+	
+</div>
+{% endblock areatrabajo %}
+
+{% block javascrips}
+<script src="{% static 'filtrar.js' %}"></script>
+{%endblock javascrips}

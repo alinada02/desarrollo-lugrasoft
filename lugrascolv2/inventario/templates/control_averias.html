@@ -1,0 +1,140 @@
+{% extends "dashboard.html" %}
+{% load static%}
+
+{% block title %}
+	<title>Inventario</title>
+{% endblock title %}
+{% block titulohoja%}
+	<h2 class="titulo">Inventario</h2>
+{% endblock titulohoja %}
+
+
+{% block areatrabajo %}
+<link rel="stylesheet" href="{% static 'ajuste_inventario3.css' %}">
+<script> 
+
+var obtenerAveria = "{% url 'obtenerAveria'%}"
+var agregarAveria = "{% url 'agregarAverias'%}"
+var informe = "{% url 'informe'%}"
+</script>
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="{%static 'control_averias.js'%}"></script>
+
+    <h2 class="tituloa">Averia #</h2>
+
+    <div> 
+        
+        <input  class="najuste" type="number" id="ajusteN"  readonly>
+        
+    </div>
+
+
+<div class="cabecera">
+    <div class="lado_izquierdo">
+        <div class="fecha">
+            <input type="date" id="fecha" readonly>
+        </div>
+        
+        <div  class="selector">
+            
+            <select class="js-example-basic-single" name="state" id="cod_producto">
+                <option value="">Seleccione el producto</option>
+                {%for producto in productos %}
+                <option value="{{producto.cod_inventario}}">{{producto.cod_inventario}} -- {{producto.nombre}}</option>
+                {%endfor%}
+            </select>
+        </div>
+    </div>
+
+    <div class="lado_derecho">
+        
+        
+        <div class="boton">
+            <button type="submit" class="boton-envio">Ingresar Averia</button>
+        </div>
+    </div>
+</div>
+
+<!-- Ventana modal -->
+<div id="myModal" class="modal">
+    <!-- Contenido de la ventana modal -->
+    <div class="modal-content">
+    <span class="close">&times;</span>
+    <p>Estas seguro de enviar el ajuste #</p>
+        <div> 
+            <input  class="najuste" type="number" id="ajuste"  readonly>
+        </div>
+
+
+        <div class="cabecera">
+            <div class="lado_izquierdo">
+                <div class="fecha">
+                    <input type="date" id="fecha_ajuste" readonly>
+                </div>
+            </div>
+
+            <div class="lado_derecho">
+                
+                
+                <div>
+                    <button type="submit" class="boton-envio" id="confirmar">Guardar Averia</button>
+                </div>
+            </div>
+        </div>
+        <div class= "tabla">
+            <table class="table">
+                <thead class="table">
+                    <tr class="encabezado">
+                        <td>ID Producto</td>
+                        <td>Nombre</td>
+                        <td> Cantidad</td>
+                        <td></td>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr  data-tipo="{{ inv.tipo }}">
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                </tbody>
+            </table>	
+            
+        </div>
+    </div>
+</div>
+
+
+    <div class= "tabla">
+        <table class="table">
+            <thead class="table">
+                <tr class="encabezado">
+                    <td>ID Producto</td>
+                    <td>Nombre</td>
+                    <td> Cantidad</td>
+                    <td></td>
+                </tr>
+            </thead>
+            <tbody>
+                <tr  data-tipo="{{ inv.tipo }}">
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>	
+        
+    </div>
+    
+{% endblock areatrabajo %}
+
+
+
+
+{% block javascrips}
+
+{%endblock javascrips}
