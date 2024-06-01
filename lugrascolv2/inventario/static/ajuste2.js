@@ -1,10 +1,9 @@
-// In your Javascript (external .js resource or <script> tag)
 
 $(document).ready(function() {
 
     var ajusteExistente = {};
     obtenerAjuste();
-    var fechaActual = new Date();
+    var fechaActual = obtenerFechaActual();
 
     // Formatear la fecha en formato ISO (YYYY-MM-DD) para establecerla como valor predeterminado
     var fechaFormateada = fechaActual.toISOString().split('T')[0];
@@ -245,3 +244,15 @@ function getCookie(name) {
     }
     
 // Función para abrir la ventana modal
+function obtenerFechaActual() {
+    // Obtener la fecha y hora actuales en UTC
+    var fechaActual = new Date();
+    
+    // Obtener el desplazamiento horario en minutos desde UTC para la zona horaria de Colombia (UTC-5)
+    var offsetColombia = -5 * 60;
+    
+    // Calcular la fecha y hora en la zona horaria de Colombia
+    var fechaColombia = new Date(fechaActual.getTime() + offsetColombia * 60 * 1000);
+    
+    return fechaColombia;
+}

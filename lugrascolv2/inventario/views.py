@@ -6,9 +6,11 @@ from dashboard.models import  Inventario, TransaccionAjuste, Ajustes, Averias, T
 from django.db.models import Max, F
 from docx import Document
 from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle, Spacer
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib import colors
+
+
 #Create your views here.
 
 # Create your views here.
@@ -98,7 +100,6 @@ def agregar_transaccion_averias(request):
                     document.add_heading('Transacciones de Averías', level=1)
                     for datos in datos_tabla:
                         codigo = datos['codigo']
-                        descripcion = datos['descripcion']
                         fecha_ajuste = datos['fecha']
                         producto = datos['id_producto']
                         cantidad = datos['cantidad']
@@ -179,7 +180,11 @@ def generar_informe_averia(request):
 
     # Título y fecha de la avería
     content.append(Paragraph(f"Informe de Avería #{id_averia}", styles['Title']))
+    content.append(Spacer(1, 30)) 
+
     content.append(Paragraph(f"Fecha de Avería: {fecha_averia}", styles['Normal']))
+    
+    content.append(Spacer(1, 30))  
 
     # Detalles de las transacciones en forma de tabla
     data = [['Código de Inventario', 'Nombre', 'Cantidad']]

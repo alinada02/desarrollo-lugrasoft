@@ -4,7 +4,7 @@ $(document).ready(function() {
     
     var ajusteExistente = {};
     obtenerAjuste();
-    var fechaActual = new Date();
+    var fechaActual = obtenerFechaActual();
 
     // Formatear la fecha en formato ISO (YYYY-MM-DD) para establecerla como valor predeterminado
     var fechaFormateada = fechaActual.toISOString().split('T')[0];
@@ -74,7 +74,6 @@ $(document).ready(function() {
 
         // Controlador de eventos para el botón de envío
         $('.boton-envio').on('click', function() {
-            ajusteExistente.descripcion = $('#descripcion').val();
             ajusteExistente.fecha = $('#fecha').val();
             // Abrir modal
             abrirModal();
@@ -87,12 +86,12 @@ $(document).ready(function() {
 
 
             // Obtener el valor actualizado de la descripción
-            var descripcionActualizada = ajusteExistente.descripcion;
+            
     
             // Asignar valores de fecha y descripción
             var fecha = $('#fecha').val();
             $('#fecha_ajuste').val(fechaActual);
-            $('#descripcion_ajuste').val(descripcionActualizada);
+            
     
             // Abrir modal
             modal.style.display = "block";
@@ -113,19 +112,16 @@ $(document).ready(function() {
 
             if (Object.keys(ajusteExistente).length !== 0) {
                 $('#fecha_ajuste').val(ajusteExistente.fecha);
-                $('#descripcion_ajuste').val(ajusteExistente.descripcion);
                 $('#fecha_ajuste').prop('readonly', true);
-                $('#descripcion_ajuste').prop('readonly', true);
+                
             }
     
             // Agregar un evento de clic al botón de cierre para cerrar la ventana modal
             span.onclick = function() {
                            // Al cerrar el modal sin confirmar, actualizar los ajustes existentes
                 ajusteExistente.fecha = $('#fecha_ajuste').val();
-                ajusteExistente.descripcion = $('#descripcion_ajuste').val();
                 modal.style.display = "none";
                 $('#fecha_ajuste').val(ajusteExistente.fecha).prop('readonly', true);
-                $('#descripcion_ajuste').val(ajusteExistente.descripcion).prop('readonly', true);
             }
     
             // Controlador de eventos para el botón "Guardar ajuste" dentro del modal
@@ -149,7 +145,6 @@ function obtenerAjuste() {
             // Actualizar los campos de ajuste si el modal está abierto
             if ($('#myModal').is(':visible')) {
                 $('#fecha_ajuste').val(ajusteExistente.fecha);
-                $('#descripcion_ajuste').val(ajusteExistente.descripcion);
             }
         },
         error: function(xhr, status, error) {
@@ -161,7 +156,6 @@ function obtenerAjuste() {
 function enviarDatos() {
     var ajusteN = $('#ajusteN').val();
     var fecha = $('#fecha').val();
-    var descripcion = $('#descripcion').val();
     var id_averia = ajusteN;
     console.log('id_averia:', id_averia);
 
@@ -188,7 +182,6 @@ function enviarDatos() {
             datos_tabla.push({
                 'codigo': ajusteN,
                 'fecha': fecha,
-                'descripcion': descripcion,
                 'id_producto': idProducto,
                 'nombre_producto': nombreProducto,
                 'cantidad': cantidad
@@ -275,3 +268,15 @@ function getCookie(name) {
     return cookieValue;
     }
     
+    function obtenerFechaActual() {
+        // Obtener la fecha y hora actuales en UTC
+        var fechaActual = new Date();
+        
+        // Obtener el desplazamiento horario en minutos desde UTC para la zona horaria de Colombia (UTC-5)
+        var offsetColombia = -5 * 60;
+        
+        // Calcular la fecha y hora en la zona horaria de Colombia
+        var fechaColombia = new Date(fechaActual.getTime() + offsetColombia * 60 * 1000);
+        
+        return fechaColombia;
+    }

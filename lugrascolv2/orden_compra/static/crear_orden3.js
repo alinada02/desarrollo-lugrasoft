@@ -1,9 +1,9 @@
 document.addEventListener("DOMContentLoaded", function() {
-
+    
     // Obtener el campo de fecha
     var fechaCreacionInput = document.getElementById("fechaCreacion");
     // Obtener la fecha actual
-    var fechaActual = new Date();
+    var fechaActual = obtenerFechaActual();
     // Formatear la fecha actual como YYYY-MM-DD
     var fechaFormatoISO = fechaActual.toISOString().split('T')[0];
     // Establecer la fecha por defecto en el campo de fecha
@@ -82,12 +82,10 @@ document.addEventListener("DOMContentLoaded", function() {
         var celdaTotal = nuevaFila.insertCell(); //5
            celdaTotal.textContent = "0";  // Inicializa el total a 0
         nuevaFila.insertCell().textContent = fechaCreacion; //6
-        nuevaFila.insertCell().contentEditable = true; //7
         nuevaFila.insertCell().textContent= id_proveedor;
         nuevaFila.insertCell().textContent = numeroFactura;
-        
 
-        var celdaBorrar = nuevaFila.insertCell(9);
+        var celdaBorrar = nuevaFila.insertCell();
         var iconoBorrar = document.createElement('span');
         iconoBorrar.classList.add('delete');
         iconoBorrar.style.color = 'red'; 
@@ -136,6 +134,47 @@ document.addEventListener("DOMContentLoaded", function() {
         // Asignar eventos onblur para calcular y actualizar el total
         celdaCantidad.onblur = actualizarTotal;
         celdaPrecio.onblur = actualizarTotal;
+
+
+        // En lugar de simplemente insertar texto en la celda, creamos un elemento <select>
+    var selectUnidad = document.createElement('select');
+
+    // Agregamos opciones al selector
+    var option1 = document.createElement('option');
+    option1.value = 'Unidad'; // Asigna el valor deseado para la opción
+    option1.textContent = 'Unidad'; // Texto visible de la opción
+    selectUnidad.appendChild(option1);
+
+    var option2 = document.createElement('option');
+    option2.value = 'Galon'; // Asigna el valor deseado para la opción
+    option2.textContent = 'Galon'; // Texto visible de la opción
+    selectUnidad.appendChild(option2);
+
+    var option3 = document.createElement('option');
+    option3.value = 'Kg'; // Asigna el valor deseado para la opción
+    option3.textContent = 'Kg'; // Texto visible de la opción
+    selectUnidad.appendChild(option3);
+
+    var option4 = document.createElement('option');
+    option4.value = 'Gr'; // Asigna el valor deseado para la opción
+    option4.textContent = 'Gr'; // Texto visible de la opción
+    selectUnidad.appendChild(option4);
+
+    // Asignamos el valor seleccionado al valor existente en la celda de la tabla
+
+    // Asignamos el evento onblur para actualizar el total de la factura cuando se cambie la selección
+    selectUnidad.onchange = actualizarTotal;
+
+    // Agregamos el selector a la celda
+
+// Agregamos el selector a la celda
+    nuevaFila.insertCell(6).appendChild(selectUnidad);
+
+
+
+
+
+
     });
 
 
@@ -157,7 +196,7 @@ document.addEventListener("DOMContentLoaded", function() {
                     var precioUnitario = parseFloat(celdas[3].textContent);
                     var celdaTotal = parseFloat(celdas[4].textContent);
                     var fechaCreacion = celdas[5].textContent;
-                    var unidad = celdas[6].textContent;
+                    var unidad = celdas[6].querySelector('select').value; 
                     var idProveedor = celdas[7].textContent;
                     var numeroFactura = celdas[8].textContent;  
                     var recibido = false; // Inicializar recibido como false
@@ -207,7 +246,9 @@ document.addEventListener("DOMContentLoaded", function() {
     var modal = document.getElementById("miModal");
     var modal2 = document.getElementById("miModal2")
     var addprod = document.getElementById("addprod")
-    
+    var form = document.getElementById("miModal").querySelector("form");
+    var formulario = document.getElementById("formulario");
+
     // Obtener el elemento <span> que cierra la ventana modal
     var span = document.getElementsByClassName("close")[0];
     var span2 = document.getElementsByClassName("closemodal2")[0];
@@ -238,31 +279,35 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     }
 
-
-            // Función para mostrar una alerta de confirmación antes de enviar el formulario
-    function confirmarEnvio() {
-            // Obtener los valores del formulario
-        var nit = document.getElementById('nit').value;
-        var nombre = document.getElementById('nombreproveedor').value;
-        var direccion = document.getElementById('direccion').value;
-        var telefono = document.getElementById('telefono').value;
-                
-                        // Construir el mensaje de confirmación con los datos del formulario
-        var mensaje = "Por favor, confirme los siguientes datos:\n";
-        mensaje += "NIT: " + nit + "\n";
-        mensaje += "Nombre: " + nombre + "\n";
-        mensaje += "Dirección: " + direccion + "\n";
-        mensaje += "Teléfono: " + telefono + "\n";
-                
-            // Mostrar una alerta de confirmación con los datos del formulario
-        if (confirm(mensaje)) {
-            // Enviar el formulario si el usuario confirma
-            return true;
-        } else {
+    form.addEventListener("submit", function(event) {
+        // Mostrar una confirmación antes de enviar los datos
+        var confirmacion = confirm("¿Estás seguro de que deseas enviar los datos?");
+        if (!confirmacion) {
             // Cancelar el envío del formulario si el usuario cancela
-            return false;
+            event.preventDefault();
+        } else {
+            // Verificar si el proveedor ya existe
+            var nit = document.getElementById('nit').value;
+            if (Proveedores.objects.filter(id_proveedor=nit).exists()) {
+                // Mostrar una alerta indicando que el proveedor ya existe
+                alert("¡El proveedor con este NIT ya existe en la base de datos!");
+                // Detener el envío del formulario
+                event.preventDefault();
+            }
         }
-    }
+    });
+    // Agregar evento al enviar el formulario
+    formulario.addEventListener("submit", function(event) {
+        // Modificar los valores antes de enviar el formulario
+        document.getElementById("cant").value = "0"; // Establecer cantidad en 0
+        document.getElementById("costo_unitario").value = "0"; // Establecer costo unitario en 0
+        document.getElementById("id_compra").value = "0"; // Dejar id_compra vacío
+
+        // Aquí puedes agregar más modificaciones según tus necesidades
+
+        // Continuar con el envío del formulario
+        return true;
+    });
 
 });
 
@@ -319,3 +364,40 @@ function calcularTotalFactura() {
     return totalFactura;
 }
 
+            // Función para mostrar una alerta de confirmación antes de enviar el formulario
+            function confirmarEnvio() {
+                // Obtener los valores del formulario
+            var nit = document.getElementById('nit').value;
+            var nombre = document.getElementById('nombreproveedor').value;
+            var direccion = document.getElementById('direccion').value;
+            var telefono = document.getElementById('telefono').value;
+                    
+                            // Construir el mensaje de confirmación con los datos del formulario
+            var mensaje = "Por favor, confirme los siguientes datos:\n";
+            mensaje += "NIT: " + nit + "\n";
+            mensaje += "Nombre: " + nombre + "\n";
+            mensaje += "Dirección: " + direccion + "\n";
+            mensaje += "Teléfono: " + telefono + "\n";
+                    
+                // Mostrar una alerta de confirmación con los datos del formulario
+            if (confirm(mensaje)) {
+                // Enviar el formulario si el usuario confirma
+                return true;
+            } else {
+                // Cancelar el envío del formulario si el usuario cancela
+                return false;
+            }
+        }
+    
+        function obtenerFechaActual() {
+            // Obtener la fecha y hora actuales en UTC
+            var fechaActual = new Date();
+            
+            // Obtener el desplazamiento horario en minutos desde UTC para la zona horaria de Colombia (UTC-5)
+            var offsetColombia = -5 * 60;
+            
+            // Calcular la fecha y hora en la zona horaria de Colombia
+            var fechaColombia = new Date(fechaActual.getTime() + offsetColombia * 60 * 1000);
+            
+            return fechaColombia;
+        }
