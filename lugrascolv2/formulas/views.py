@@ -1,6 +1,6 @@
 import json
 from django.shortcuts import get_object_or_404, render
-from dashboard.models import Inventario, TransMp, Transformulas, Proveedores
+from .models import Inventario, TransMp, Transformulas, Proveedores
 from django.http import JsonResponse, HttpResponseBadRequest
 from django.views.decorators.csrf import csrf_exempt
 from django.core.exceptions import ObjectDoesNotExist 

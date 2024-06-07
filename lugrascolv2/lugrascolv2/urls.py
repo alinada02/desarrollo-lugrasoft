@@ -25,5 +25,6 @@ urlpatterns = [
     path('dash/', include('dashboard.urls')),
     path('admin/', admin.site.urls),
     path('formulas/',include('formulas.urls')),
-    path('proveedor/', include('proveedores.urls'))
+    path('proveedor/', include('proveedores.urls')),
+    path('pedidos', include('produccion.urls')),
 ]

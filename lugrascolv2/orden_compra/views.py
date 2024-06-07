@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 # Create your views here. 
-from dashboard.models import  Proveedores, Compras , Inventario, TransMp
+from .models import  Proveedores, Compras , Inventario, TransMp
 from django.http import HttpResponse, JsonResponse
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils.dateparse import parse_date

@@ -46,7 +46,8 @@ INSTALLED_APPS = [
     'inventario',
     'orden_compra',
     'formulas',
-    'proveedores'
+    'proveedores',
+    'produccion',
 ]
 
 CRISPY_ALLOWED_TEMPLATE_PACK = 'bootstrap5'

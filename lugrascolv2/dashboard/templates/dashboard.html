@@ -20,10 +20,14 @@
         <nav class="nav">
             <ul class="menu">
                 <li><a href="#"><i class="bi bi-graph-up-arrow"></i>  Facturación</a></li>
-                <li><a href="#"><i class="bi bi-gear"></i> Produccion</a></li>
+                <li><a href="#"><i class="bi bi-gear-fill"></i></i></i> Producción</a>
+                    <ul class="submenu">
+                        <li><a href="#"><i class="bi bi-list"></i>Ordenes de Producción </a></li>
+                        <li><a href="{% url 'pedidos'%}"><i class="bi bi-cart-plus"></i>Agregar Pedido</a></li>
+                    </ul>
                 <li><a href="{% url 'inv'%}"><i class="bi bi-boxes"></i> Inventario</a></li>
                 <li><a href="#"><i class="bi bi-files"></i> Reportes</a></li>
-                <li><a href="{% url 'formula'%}"><i class="bi bi-eyedropper"></i></i> Formulas</a>
+                <li><a href="{% url 'verformula'%}"><i class="bi bi-eyedropper"></i></i> Formulas</a>
                     <ul class="submenu">
                         <li><a href="{% url 'verformula' %}"><i class="bi bi-list"></i>Formulas</a></li>
                         <li><a href="{% url 'formula'%}"><i class="bi bi-cart-plus"></i>Agregar Formula</a></li>
