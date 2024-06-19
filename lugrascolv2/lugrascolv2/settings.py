@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'formulas',
     'proveedores',
     'produccion',
+    
 ]
 
 CRISPY_ALLOWED_TEMPLATE_PACK = 'bootstrap5'
@@ -146,3 +147,19 @@ LOGOUT_REDIRECT_URL= 'home'
 LOGIN_REDIRECT_URL= 'home'
 LOGIN_URL = 'login'
 LOGOUT_URL = 'logout'
+
+LOGGING = {
+    'version': 1,
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+        },
+    },
+}

@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 # Create your views here. 
 from .models import  Proveedores, Compras , Inventario, TransMp
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, HttpResponseForbidden, JsonResponse
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils.dateparse import parse_date
 import json
@@ -10,12 +10,20 @@ from itertools import groupby
 from django.db import transaction
 from django.http import HttpResponseRedirect
 from django.utils import timezone
+from django.contrib.auth.decorators import user_passes_test
+
+
+
+
 
 
 def orden(request):
-    proveedor = Proveedores.objects.all()
-    estado_transaccion = TransMp.objects.all()
-    return render(request, 'orden_compra.html',{"proveedor": proveedor,  "estado_transaccion": estado_transaccion})
+    if request.user.username == "KeydenSaid":
+        return HttpResponseForbidden("¡Acceso no autorizado!")
+    else:
+        proveedor = Proveedores.objects.all()
+        estado_transaccion = TransMp.objects.all()
+        return render(request, 'orden_compra.html',{"proveedor": proveedor,  "estado_transaccion": estado_transaccion})
 
 
 
@@ -360,3 +368,7 @@ def obtener(request):
         return JsonResponse(data, safe=False)
     else:
         return JsonResponse({'error': 'No se proporcionó un ID de proveedor válido'}, status=400)
+    
+    
+
+

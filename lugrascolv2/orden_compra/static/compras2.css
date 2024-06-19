@@ -1,6 +1,6 @@
 .tabla {
     max-width: 100%;
-    margin: 20px auto;
+    margin-top: 50px;
     overflow-x: auto;
     background: #fff;
     border-radius: 8px;
@@ -83,7 +83,7 @@
 .modal {
     display: none; /* Oculta la modal */
     position: fixed; /* Se queda fija en pantalla */
-    z-index: 1; /* Sitúa la modal sobre el contenido */
+    z-index: 1000; /* Sitúa la modal sobre el contenido */
     left: 0;
     top: 0;
     width: 100%; /* Anchura completa */

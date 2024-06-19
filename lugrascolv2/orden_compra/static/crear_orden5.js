@@ -1,5 +1,6 @@
 document.addEventListener("DOMContentLoaded", function() {
-    
+    $('#producto').select2();
+    $('#proveedor').select2();
     // Obtener el campo de fecha
     var fechaCreacionInput = document.getElementById("fechaCreacion");
     // Obtener la fecha actual
@@ -10,179 +11,157 @@ document.addEventListener("DOMContentLoaded", function() {
     fechaCreacionInput.value = fechaFormatoISO;
     fechaCreacionInput.setAttribute('readonly', 'readonly');
 
-    var proveedorSelector = document.getElementById("proveedor");
+    
     var productoSelector = document.getElementById("producto");
     var tablaFormulario = document.getElementById("tabla-formulario").getElementsByTagName('tbody')[0];
     var enviarFormularioBtn = document.getElementById("enviarFormularioBtn");
     var divTotalFactura = document.getElementById("totalFactura");
-    $(document).ready(function() {
-        $('#producto').select2();
-        $('#proveedor').select2();
-    });
-
-
-    proveedorSelector.addEventListener("change", function() {
-        var proveedorSeleccionado = this.options[this.selectedIndex];
-        var proveedorId = proveedorSeleccionado.value;
-        var direccion = proveedorSeleccionado.getAttribute("data-direc");
-        var telefono = proveedorSeleccionado.getAttribute("data-tel")
-
-
-        var divNitProveedor = document.getElementById("nitproveedor");
-        var divDireccionProveedor = document.getElementById("direccion");
-        var divTelefonoProveedor = document.getElementById("telefono");
-
-        divNitProveedor.textContent = proveedorId;
-        divDireccionProveedor.textContent = direccion;
-        divTelefonoProveedor.textContent = telefono;
-
-
-        proveedorSelector.disabled = true;
-
-        productoSelector.innerHTML = '<option value="">Producto</option>';
-        if (proveedorId) {
-            $.ajax({
-                url: obtenerProductosURL, // URL para obtener los productos por proveedor
-                method: "GET",
-                data: { proveedor_id: proveedorId },
-                dataType: "json",
-                success: function(data) {
-                    data.forEach(function(producto) {
-                        var option = document.createElement("option");
-                        option.value = producto.id;
-                        option.textContent = producto.nombre;
-                        option.dataset.proveedorId = producto.proveedor_id;
-                        productoSelector.appendChild(option);
-                    });
-                },
-                error: function(xhr, textStatus, errorThrown) {
-                    console.error('Error al obtener los productos: ' + errorThrown);
-                }
-            });
-        }
+    
+    
+    
+    
+// Evento change del selector #proveedor
+$('#proveedor').on('change', function() {
+    // Limpiar y actualizar información del proveedor seleccionado
+    var proveedorId = $(this).val();
+    var direccion = $('#proveedor option:selected').attr('data-direc');
+    var telefono = $('#proveedor option:selected').attr('data-tel');
+    
+    $('#nitproveedor').text(proveedorId);
+    $('#direccion').text(direccion);
+    $('#telefono').text(telefono);
+    
+    // Actualizar atributo data-proveedor-id del selector #producto
+    $('#producto').attr('data-proveedor-id', proveedorId);
+    // Deshabilitar el selector de proveedores después de seleccionar uno
+    $('#proveedor').prop('disabled', true);
+    // Si se ha seleccionado un proveedor válido, cargar los productos en el selector
+    if (proveedorId) {
+        $.ajax({
+            url: obtenerProductosURL, // URL para obtener los productos por proveedor
+            method: "GET",
+            data: { proveedor_id: proveedorId },
+            dataType: "json",
+            success: function(data) {
+                // Limpiar opciones actuales del selector de productos
+                $('#producto').empty();
+                
+                // Agregar opción inicial
+                $('#producto').append('<option value="">Producto</option>');
+                
+                // Agregar opciones de productos obtenidos
+                data.forEach(function(producto) {
+                    var option = new Option(producto.nombre, producto.id, false, false);
+                    $('#producto').append(option);
+                });
+                
+                // Restablecer el selector de productos (Select2) después de actualizar las opciones
+                $('#producto').select2();
+            },
+            error: function(xhr, textStatus, errorThrown) {
+                console.error('Error al obtener los productos: ' + errorThrown);
+            }
         });
+    } else {
+        // Si no se selecciona ningún proveedor válido, limpiar el selector de productos
+        $('#producto').empty().append('<option value="">Producto</option>').select2();
+    }
+});
 
+// Evento change del selector #producto (Select2)
+$('#producto').on('change', function() {
+    // Verificar si se ha ingresado el número de factura
+    var numeroFactura = $('#numeroFactura').val().trim();
+    if (numeroFactura === '') {
+        alert("Por favor, ingrese el número de factura antes de seleccionar un producto.");
+        return; // Detener el proceso si el número de factura no está ingresado
+    }
+    // Obtener datos del producto seleccionado
+    var productoSeleccionado = $(this).select2('data')[0];
     
-    productoSelector.addEventListener("change", function() {
-        var productoSeleccionado = this.options[this.selectedIndex];
-        var id_producto = productoSeleccionado.value;
-        var nombre_producto = productoSeleccionado.textContent;
-        var id_proveedor = productoSeleccionado.dataset.proveedorId;
-        var fechaCreacion = document.getElementById("fechaCreacion").value;
-        var numeroFactura = document.getElementById("numeroFactura").value
+    // Validar si se ha seleccionado un producto válido
+    if (productoSeleccionado) {
+        var id_producto = productoSeleccionado.id;
+        var nombre_producto = productoSeleccionado.text;
+        var id_proveedor = $(this).attr('data-proveedor-id');
+        var fechaCreacion = document.getElementById("fechaCreacion").value; 
+        var numeroFactura = document.getElementById("numeroFactura").value; // Obtener número de factura
 
-        // Deshabilitar opción seleccionada
-        productoSeleccionado.disabled = true;
-    
+        console.log("ID del producto seleccionado:", id_producto);
+        console.log("Nombre del producto seleccionado:", nombre_producto);
+        console.log("ID del proveedor del producto:", id_proveedor);
+        
+        // Crear una nueva fila en la tabla
         var nuevaFila = tablaFormulario.insertRow();
-        nuevaFila.insertCell().textContent = id_producto; // 1
-        nuevaFila.insertCell().textContent = nombre_producto; //2
-        // Celdas editables
-        var celdaCantidad = nuevaFila.insertCell(); //3
-        celdaCantidad.contentEditable = true; // Hacer la celda de cantidad editable 
-        var celdaPrecio = nuevaFila.insertCell(); //4
-        celdaPrecio.contentEditable = true; // Hacer la celda de precio editable
-        // Celda para el total
-        var celdaTotal = nuevaFila.insertCell(); //5
-           celdaTotal.textContent = "0";  // Inicializa el total a 0
-        nuevaFila.insertCell().textContent = fechaCreacion; //6
-        nuevaFila.insertCell().textContent= id_proveedor;
+        nuevaFila.insertCell().textContent = id_producto; // ID del producto
+        nuevaFila.insertCell().textContent = nombre_producto; // Nombre del producto
+        nuevaFila.insertCell().contentEditable = true; // Cantidad (editable)
+        nuevaFila.insertCell().contentEditable = true; // Precio (editable)
+        nuevaFila.insertCell().textContent = "0"; // Total inicializado en 0
+        nuevaFila.insertCell().textContent = fechaCreacion; // Fecha de creación
+        var celdaUnidad = nuevaFila.insertCell();
+        var selectUnidad = document.createElement('select');
+        selectUnidad.innerHTML = '<option value="Unidad">Unidad</option>' +
+                                 '<option value="Galon">Galon</option>' +
+                                 '<option value="Kg">Kg</option>' +
+                                 '<option value="Gr">Gr</option>';
+        celdaUnidad.appendChild(selectUnidad);
+        nuevaFila.insertCell().textContent = id_proveedor; // ID del proveedor
+        // Celda para el número de factura (suponiendo que 'numeroFactura' está definido)
         nuevaFila.insertCell().textContent = numeroFactura;
-
+        // Celda para el icono de borrado
         var celdaBorrar = nuevaFila.insertCell();
         var iconoBorrar = document.createElement('span');
         iconoBorrar.classList.add('delete');
-        iconoBorrar.style.color = 'red'; 
-        iconoBorrar.style.textAlign= 'center';
+        iconoBorrar.style.color = 'red';
         iconoBorrar.textContent = 'X';
         celdaBorrar.appendChild(iconoBorrar);
-
-        // Añadir evento para manejar la eliminación de la fila
+        
+        // Evento para manejar la eliminación de la fila
         iconoBorrar.addEventListener('click', function() {
             var filaParaEliminar = this.closest('tr');
             filaParaEliminar.remove();
-
-            // Reactivar la opción en el selector
-            productoSelector.options[productoSelector.selectedIndex].disabled = false;
-            // Opcionalmente, restablecer el selector al estado inicial
-            productoSelector.selectedIndex = 0;
         });
-            // Función para calcular el total de la fila
-        // Función para calcular el total de una fila
+        
+        // Función para calcular el total de la fila
         function actualizarTotal() {
             var fila = this.parentNode;
-            var celdaCantidad = fila.cells[2];
-            var celdaPrecio = fila.cells[3];
+            var celdaCantidad = parseFloat(fila.cells[2].textContent);
+            var celdaPrecio = parseFloat(fila.cells[3].textContent);
             var celdaTotal = fila.cells[4];
-
-            var cantidad = parseFloat(celdaCantidad.textContent);
-            var precioUnitario = parseFloat(celdaPrecio.textContent);
-            celdaTotal.textContent = (cantidad * precioUnitario).toFixed(2);
-
-            // Calcular y actualizar el total de la factura
+            
+            // Calcular el total y actualizar la celda correspondiente
+            var total = celdaCantidad * celdaPrecio;
+            celdaTotal.textContent = total.toFixed(2);
+            
+            // Actualizar el total de la factura
             actualizarTotalFactura();
         }
-
-        // Función para calcular y actualizar el total de la factura
-        function actualizarTotalFactura() {
-            var totalFactura = 0;
-            var filas = tablaFormulario.rows;
-            for (var i = 0; i < filas.length; i++) {
-                var celdaTotal = parseFloat(filas[i].cells[4].textContent);
-                totalFactura += isNaN(celdaTotal) ? 0 : celdaTotal; // Ignorar celdas vacías o no numéricas
-            }
-            // Mostrar el total de la factura dentro del div de total factura
-            divTotalFactura.textContent = "Total de la factura: $" + totalFactura.toFixed(2);
-        }
-
+        
         // Asignar eventos onblur para calcular y actualizar el total
-        celdaCantidad.onblur = actualizarTotal;
-        celdaPrecio.onblur = actualizarTotal;
+        nuevaFila.cells[2].onblur = actualizarTotal;
+        nuevaFila.cells[3].onblur = actualizarTotal;
+        
+        // Calcular y mostrar el total inicial de la factura
+        actualizarTotalFactura();
+    }
+});
+function actualizarTotalFactura() {
+    var totalFactura = 0;
+    var filas = tablaFormulario.rows;
+    for (var i = 0; i < filas.length; i++) {
+        var celdaTotal = parseFloat(filas[i].cells[4].textContent);
+        totalFactura += isNaN(celdaTotal) ? 0 : celdaTotal; // Ignorar celdas vacías o no numéricas
+    }
+    // Mostrar el total de la factura dentro del div de total factura
+    divTotalFactura.textContent = "Total de la factura: $" + totalFactura.toLocaleString('es-ES', {minimumFractionDigits: 2});
+}
 
 
-        // En lugar de simplemente insertar texto en la celda, creamos un elemento <select>
-    var selectUnidad = document.createElement('select');
-
-    // Agregamos opciones al selector
-    var option1 = document.createElement('option');
-    option1.value = 'Unidad'; // Asigna el valor deseado para la opción
-    option1.textContent = 'Unidad'; // Texto visible de la opción
-    selectUnidad.appendChild(option1);
-
-    var option2 = document.createElement('option');
-    option2.value = 'Galon'; // Asigna el valor deseado para la opción
-    option2.textContent = 'Galon'; // Texto visible de la opción
-    selectUnidad.appendChild(option2);
-
-    var option3 = document.createElement('option');
-    option3.value = 'Kg'; // Asigna el valor deseado para la opción
-    option3.textContent = 'Kg'; // Texto visible de la opción
-    selectUnidad.appendChild(option3);
-
-    var option4 = document.createElement('option');
-    option4.value = 'Gr'; // Asigna el valor deseado para la opción
-    option4.textContent = 'Gr'; // Texto visible de la opción
-    selectUnidad.appendChild(option4);
-
-    // Asignamos el valor seleccionado al valor existente en la celda de la tabla
-
-    // Asignamos el evento onblur para actualizar el total de la factura cuando se cambie la selección
-    selectUnidad.onchange = actualizarTotal;
-
-    // Agregamos el selector a la celda
-
-// Agregamos el selector a la celda
-    nuevaFila.insertCell(6).appendChild(selectUnidad);
+    
 
 
-
-
-
-
-    });
-
-
-
+    var enviarFormularioBtn = document.getElementById("enviarFormularioBtn");
     enviarFormularioBtn.addEventListener("click", function() {
         var confirmacion = confirm("¿Estás seguro de que deseas enviar la información?");
         if (confirmacion) {
@@ -312,7 +291,6 @@ document.addEventListener("DOMContentLoaded", function() {
         // Continuar con el envío del formulario
         return true;
     });
-
 });
 
 function getCookie(name) {
@@ -404,4 +382,20 @@ function calcularTotalFactura() {
             var fechaColombia = new Date(fechaActual.getTime() + offsetColombia * 60 * 1000);
             
             return fechaColombia;
+        }
+
+
+
+        function actualizarTotal() {
+            var fila = this.parentNode;
+            var celdaCantidad = fila.cells[2];
+            var celdaPrecio = fila.cells[3];
+            var celdaTotal = fila.cells[4];
+
+            var cantidad = parseFloat(celdaCantidad.textContent);
+            var precioUnitario = parseFloat(celdaPrecio.textContent);
+            celdaTotal.textContent = (cantidad * precioUnitario).toFixed(2);
+
+            // Calcular y actualizar el total de la factura
+            actualizarTotalFactura();
         }

@@ -3,12 +3,14 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from .models import Clientes, Inventario, OrdenProduccion, Transformulas
 from django.db.models import Max, F
+from django.contrib.auth.models import User
 
 # Create your views here.
 def pedido(request):
     cliente = Clientes.objects.all()
     producto = Inventario.objects.filter(tipo='pt')
-    return render(request, 'pedidos.html', {'clientes': cliente, 'productos': producto})
+    usuarios = User.objects.all()
+    return render(request, 'pedidos1.html', {'clientes': cliente, 'productos': producto, 'usuarios': usuarios})
 
 
 
@@ -85,3 +87,7 @@ def obtener_materias_primas(request):
         except Transformulas.DoesNotExist:
             return JsonResponse({'success': False, 'error': 'Fórmula no encontrada'})
     return JsonResponse({'success': False, 'error': 'ID de producto no proporcionado'})
+
+
+
+

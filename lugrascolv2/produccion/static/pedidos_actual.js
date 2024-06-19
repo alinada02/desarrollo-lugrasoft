@@ -1,5 +1,4 @@
 document.addEventListener("DOMContentLoaded", function() {
-    
     var fechaCreacionInput = document.getElementById("fechaCreacion");
     var fechaActual = obtenerFechaActual();
     var fechaFormatoISO = fechaActual.toISOString().split('T')[0];
@@ -35,7 +34,8 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 
     mostrarPestanaActiva();
-    
+
+
     fechaCreacionInput.value = fechaFormatoISO;
     fechaCreacionInput.setAttribute('readonly', 'readonly');
 
@@ -65,23 +65,20 @@ document.addEventListener("DOMContentLoaded", function() {
                             const cantidadMP = mp.cantidad_requerida;
 
                             if (materiasPrimasRequeridas[codigoMP]) {
-                                // Si la materia prima ya está en el registro, sumar la cantidad requerida
                                 materiasPrimasRequeridas[codigoMP] += cantidadMP;
                             } else {
-                                // Si no está en el registro, asignar la cantidad requerida
                                 materiasPrimasRequeridas[codigoMP] = cantidadMP;
                             }
                         });
 
-                        // Actualizar los contenedores de existencias y materias primas
-                        updateInfoContainers();
+                        actualizarVisualizacionMateriasPrimasRequeridas();
+                        
 
-                        const newRow = $('<tr>');
-
+                        const newRow = $('<tr>').data('productoId', productoId);
                         const idCell = $('<td>').text(productoId);
                         const nombreCell = $('<td>').text(productoNombre);
                         const cantidadCell = $('<td>');
-                        const cantidadInput = $('<input>').attr('type', 'number').addClass('cantidad-input').val(1);
+                        const cantidadInput = $('<input>').attr('type', 'number').val(1).addClass('cantidad-input');
                         cantidadCell.append(cantidadInput);
 
                         const opcionesCell = $('<td>');
@@ -90,18 +87,22 @@ document.addEventListener("DOMContentLoaded", function() {
                             newRow.remove();
                             selectedProducts.delete(productoId);
                             $('#producto option[value="' + productoId + '"]').prop('disabled', false);
-                            updateInfoContainers(); // Actualizar al eliminar producto
                             updateContainersAfterDeletion();
                         });
                         opcionesCell.append(deleteButton);
 
-                        newRow.append(idCell, nombreCell, cantidadCell, opcionesCell).attr('data-producto-id', productoId);
+                        newRow.append(idCell, nombreCell, cantidadCell, opcionesCell);
 
                         $('#tabla-formulario tbody').append(newRow);
 
                         $('#producto option[value="' + productoId + '"]').prop('disabled', true);
                         $('#producto').val(null).trigger('change');
 
+                        // Añadir evento para actualizar las materias primas cuando cambia la cantidad
+                        cantidadInput.on('input', function() {
+                            const nuevaCantidad = $(this).val();
+                            updateInfoContainers(materiasPrimas, nuevaCantidad);
+                        });
                     } else {
                         alert('Error: ' + response.error);
                     }
@@ -116,74 +117,23 @@ document.addEventListener("DOMContentLoaded", function() {
     // Añade evento de clic a las filas de la tabla
     $('#tabla-formulario').on('click', 'tr', function() {
         const productoId = $(this).data('productoId');
-        const cantidad = $(this).find('.cantidad-input').val();
-
-        // Obtener las materias primas para el producto actual
-        $.ajax({
-            url: materiasprimas, // Asegúrate de que esta URL coincide con tu configuración de Django
-            data: { producto_id: productoId },
-            success: function(response) {
-                if (response.success) {
-                    const materiasPrimas = response.materias_primas;
-
-                    // Actualizar los contenedores de existencias y materias primas
-                    updateInfoContainers();
-                } else {
-                    alert('Error: ' + response.error);
-                }
-            },
-            error: function() {
-                alert('Error al validar el producto.');
-            }
-        });
-    });
-
-    // Añade evento de cambio de entrada para las cantidades en la tabla
-    $('#tabla-formulario').on('input', '.cantidad-input', function() {
-        updateInfoContainers();
-    });
-
-    function updateInfoContainers() {
-        let existenciasHtml = '<h4>Existencias Inventario</h4>';
-        let materiasPrimasHtml = '<h4>Materias Primas</h4>';
         
-        // Reiniciar el objeto de cantidades requeridas de materias primas
-        const materiasPrimasRequeridas = {};
-    
-        // Iterar sobre todas las filas de la tabla
-        $('#tabla-formulario tbody tr').each(function() {
-            const productoId = $(this).data('productoId');
-            const cantidad = $(this).find('.cantidad-input').val() || 1; // Si no hay cantidad, se asume 1
-    
-            // Obtener las materias primas para el producto actual
+        if (productoId) {
             $.ajax({
-                url: materiasprimas, // Asegúrate de que esta URL coincida con tu configuración de Django
+                url: materiasprimas, // Asegúrate de que esta URL coincide con tu configuración de Django
                 data: { producto_id: productoId },
-                async: false, // Hacer la solicitud de manera sincrónica para garantizar el orden de ejecución
                 success: function(response) {
                     if (response.success) {
                         const materiasPrimas = response.materias_primas;
-    
-                        // Actualizar cantidades requeridas de materias primas para este producto
-                        materiasPrimas.forEach(mp => {
-                            const codigoMP = mp.codigo;
-                            const cantidadRequerida = mp.cantidad_requerida * cantidad;
-    
-                            if (materiasPrimasRequeridas[codigoMP]) {
-                                // Si la materia prima ya está en el registro, sumar la cantidad requerida
-                                materiasPrimasRequeridas[codigoMP] += cantidadRequerida;
-                            } else {
-                                // Si no está en el registro, asignar la cantidad requerida
-                                materiasPrimasRequeridas[codigoMP] = cantidadRequerida;
-                            }
-                        });
-    
-                        // Construir HTML para las existencias y las materias primas
-                        materiasPrimas.forEach(mp => {
-                            existenciasHtml += `<p>${mp.nombre} (Código: ${mp.codigo}) - Cantidad en Inventario: ${mp.cantidad_actual}</p>`;
-                            materiasPrimasHtml += `<p>${mp.nombre} (Código: ${mp.codigo}) - Cantidad Requerida: ${materiasPrimasRequeridas[mp.codigo]}</p>`;
-                        });
-    
+                        const cantidadInput = $(this).find('.cantidad-input').val() || 1;
+
+                        // Actualizar los contenedores de existencias y materias primas
+                        updateInfoContainers(materiasPrimas, cantidadInput);
+
+                        const codigoProducto = productoId.toString(); // Asegurarse de que sea un string
+                        const cantidadRequerida = materiasPrimasRequeridas[codigoProducto];
+                        console.log(`Cantidades requeridas para producto ${productoId}:`, cantidadRequerida);
+                        
                     } else {
                         alert('Error: ' + response.error);
                     }
@@ -192,11 +142,21 @@ document.addEventListener("DOMContentLoaded", function() {
                     alert('Error al validar el producto.');
                 }
             });
+        }
+    });
+
+    function updateInfoContainers(materiasPrimas, cantidad) {
+        let existenciasHtml = '<h4>Existencias Inventario</h4>';
+        let materiasPrimasHtml = '<h4>Materias Primas</h4>';
+
+        materiasPrimas.forEach(mp => {
+            existenciasHtml += `<p>${mp.nombre} (Código: ${mp.codigo}) - Cantidad en Inventario: ${mp.cantidad_actual}</p>`;
+            materiasPrimasHtml += `<p>${mp.nombre} (Código: ${mp.codigo}) - Cantidad Requerida: ${mp.cantidad_requerida * cantidad}</p>`;
         });
-        // Actualizar los contenedores de existencias y materias primas
+
         $('#existencias-inventario').html(existenciasHtml);
         $('#materias-primas').html(materiasPrimasHtml);
-        actualizarVisualizacionMateriasPrimasRequeridas(materiasPrimasRequeridas);
+        actualizarVisualizacionMateriasPrimasRequeridas();
     }
 
     function updateContainersAfterDeletion() {
@@ -213,7 +173,8 @@ document.addEventListener("DOMContentLoaded", function() {
                             const materiasPrimas = response.materias_primas;
 
                             // Actualizar los contenedores de existencias y materias primas
-                            updateInfoContainers();
+                            updateInfoContainers(materiasPrimas, cantidadInput);
+                            
                         } else {
                             alert('Error: ' + response.error);
                         }
@@ -263,20 +224,18 @@ document.addEventListener("DOMContentLoaded", function() {
     // Cuando el usuario haga clic en el botón "Addprov", abrir la ventana modal
     addprovBtn.onclick = function() {
         modal.style.display = "block";
-    };
-
+    }
     addprod.onclick = function() {
         modal2.style.display = "block";
-    };
+    }
     
     // Cuando el usuario haga clic en <span> (x), cerrar la ventana modal
     span.onclick = function() {
         modal.style.display = "none";
-    };
-
+    }
     span2.onclick = function() {
         modal2.style.display = "none";
-    };
+    }
     
     // Cuando el usuario haga clic fuera del contenido de la ventana modal, cerrarla
     window.onclick = function(event) {
@@ -286,7 +245,7 @@ document.addEventListener("DOMContentLoaded", function() {
         if (event.target == modal2) {
             modal2.style.display = "none";
         }
-    };
+    }
 
     form.addEventListener("submit", function(event) {
         // Mostrar una confirmación antes de enviar los datos
@@ -306,14 +265,14 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     });
 
-    function actualizarVisualizacionMateriasPrimasRequeridas(materiasPrimasRequeridas) {
+    function actualizarVisualizacionMateriasPrimasRequeridas() {
         let materiasPrimasHtml = '<h4>Materias Primas Requeridas</h4>';
-    
+
         Object.keys(materiasPrimasRequeridas).forEach(codigoMP => {
             const cantidadRequerida = materiasPrimasRequeridas[codigoMP];
             materiasPrimasHtml += `<p>Código: ${codigoMP} - Cantidad Requerida Total: ${cantidadRequerida}</p>`;
         });
-    
+
         $('#materias-primas-totales').html(materiasPrimasHtml);
     }
 });

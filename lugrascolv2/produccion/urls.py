@@ -4,6 +4,7 @@ urlpatterns = [
     path('', pedido, name= 'pedidos'),
     path('cliente/',add_cliente, name='addcliente' ),
     path('obtener_numero_produccion/', obtener_numero_produccion, name='obtener_numero_produccion'),
-    path('obtener_materias_primas/', obtener_materias_primas, name= 'obtenerMateriasPrimas' )
+    path('obtener_materias_primas/', obtener_materias_primas, name= 'obtenerMateriasPrimas' ),
+    
     
 ]

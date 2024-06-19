@@ -117,6 +117,7 @@ label, h4 {
     margin-bottom: 20px; /* Espacio entre la parte superior y la tabla */
     display: flex;
     justify-content: space-between; /* Distribuye las columnas horizontalmente */
+    margin-top: 50px;
 }
 
 /* Estilos para los contenedores de campos */
