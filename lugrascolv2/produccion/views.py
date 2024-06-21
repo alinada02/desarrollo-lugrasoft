@@ -1,9 +1,11 @@
+import json
 from urllib import request
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from .models import Clientes, Inventario, OrdenProduccion, Transformulas, TransaccionOrden
 from django.db.models import Max, F
 from django.contrib.auth.models import User
+from django.db import transaction
 
 # Create your views here.
 def pedido(request):
@@ -89,48 +91,64 @@ def obtener_materias_primas(request):
     return JsonResponse({'success': False, 'error': 'ID de producto no proporcionado'})
 
 
-
-
+@transaction.atomic
 def crear_transaccion_orden(request):
     if request.method == 'POST':
-        # Obtener los datos enviados desde el frontend
-        datosEnviar = request.POST  # Ajusta según cómo se envían los datos desde el frontend
-
-        # Extraer los datos específicos
-        numero_factura = datosEnviar.get('numero_factura')
-        fecha_actual = datosEnviar.get('fecha_actual')
-        fecha_estimada_entrega = datosEnviar.get('fecha_estimada_entrega')
-        prioridad = datosEnviar.get('prioridad')
-        id_cliente = datosEnviar.get('id_cliente')
-        detalles_productos = datosEnviar.getlist('detalles_productos[]')  # Ajusta según el nombre de tu campo de lista
-        responsable = datosEnviar.get('responsable')
-
+        # Obtener los datos enviados desde el frontend en formato JSON
         try:
-            # Crear la instancia de TransaccionOrden
-            transaccion_orden = TransaccionOrden.objects.create(
+            datosEnviar = json.loads(request.body.decode('utf-8'))
+            
+            # Extraer los datos específicos del objeto JSON principal
+            numero_factura = datosEnviar.get('numero_factura')
+            fecha_actual = datosEnviar.get('fecha_actual')
+            fecha_estimada_entrega = datosEnviar.get('fecha_estimada_entrega')
+            id_cliente = datosEnviar.get('id_cliente')
+            responsable = datosEnviar.get('responsable')
+            prioridad = datosEnviar.get('prioridad')
+            detallesProductos = datosEnviar.get('detallesProductos')
+            
+            # Obtener el cliente
+            cliente = get_object_or_404(Clientes, nit=id_cliente)
+            
+            # Buscar o crear la instancia de OrdenProduccion
+            orden_produccion, creado = OrdenProduccion.objects.get_or_create(
                 id_orden=numero_factura,
-                fecha_creacion=fecha_actual,
-                fecha_entrega=fecha_estimada_entrega,
-                prioridad=prioridad,
-                nit=id_cliente,
-                responsable=responsable
+                nit=cliente
             )
-
-            # Agregar los detalles de productos a los campos existentes en el modelo TransaccionOrden
-            for detalle in detalles_productos:
+            
+            # Iterar sobre los detalles de productos
+            for detalle in detallesProductos:
                 producto_id = detalle.get('producto_id')
                 cantidad = detalle.get('cantidad')
-
-                # Aquí actualizamos los campos existentes en la instancia de TransaccionOrden
-                setattr(transaccion_orden, f'producto_{producto_id}_cantidad', cantidad)
-                setattr(transaccion_orden, f'producto_{producto_id}_estado', detalle.get('estado', ''))
-                setattr(transaccion_orden, f'producto_{producto_id}_fecha_entrega', detalle.get('fecha_entrega', None))
-
-            # Guardar la instancia de TransaccionOrden con los detalles de productos añadidos
-            transaccion_orden.save()    
+                
+                # Obtener el inventario
+                inventario = get_object_or_404(Inventario, pk=producto_id)
+                
+                # Crear la transacción de orden
+                nueva_transaccion_orden = TransaccionOrden.objects.create(
+                    fecha_entrega=fecha_estimada_entrega,
+                    estado='creado',
+                    cod_inventario=inventario,
+                    cantidad=cantidad,
+                    id_orden=orden_produccion,
+                    prioridad=prioridad,
+                    fecha_creacion=fecha_actual,
+                    responsable=responsable,
+                )
+                nueva_transaccion_orden.save()
+            
             return JsonResponse({'message': 'Transacción creada correctamente'}, status=201)
-
+        
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=400)
-
+    
     return JsonResponse({'error': 'Método no permitido'}, status=405)
+
+# vistas para manejar la ventana orden de pedidos en curso
+def ver_orden_en_curso(request):
+    orden_curso = TransaccionOrden.objects.all();
+    cliente = Clientes.objects.all();
+    pedido = OrdenProduccion.objects.all();
+    return render(request, 'orden_en_curso.html', {'ordenes': orden_curso,'clientes': cliente, 'pedido': pedido})
+
+

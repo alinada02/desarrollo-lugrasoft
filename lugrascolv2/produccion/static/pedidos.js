@@ -132,6 +132,8 @@ document.addEventListener("DOMContentLoaded", function() {
     function updateInfoContainers() {
         // Reiniciar el objeto de cantidades requeridas de materias primas
         const materiasPrimasRequeridas = {};
+        // Variable para verificar si hay inventario insuficiente
+        let inventarioInsuficiente = false;
     
         // Iterar sobre todas las filas de la tabla
         $('#tabla-formulario tbody tr').each(function() {
@@ -151,6 +153,11 @@ document.addEventListener("DOMContentLoaded", function() {
                             const codigoMP = mp.codigo;
                             const cantidadRequerida = mp.cantidad_requerida * cantidad;
                             const nombreMP = mp.nombre;
+
+                            // Verificar si la cantidad requerida es mayor que la cantidad en inventario
+                            if (cantidadRequerida > (existenciasMateriasPrimas[codigoMP] || 0)) {
+                                inventarioInsuficiente = true;
+                            }
     
                             if (materiasPrimasRequeridas[codigoMP]) {
                                 // Si la materia prima ya está en el registro, sumar la cantidad requerida
@@ -162,6 +169,7 @@ document.addEventListener("DOMContentLoaded", function() {
                                     nombre: nombreMP
                                 };
                             }
+                            existenciasMateriasPrimas[codigoMP] = mp.cantidad_actual;
                         });
     
                     } else {
@@ -173,6 +181,13 @@ document.addEventListener("DOMContentLoaded", function() {
                 }
             });
         });
+         // Mostrar alerta si hay inventario insuficiente
+        if (inventarioInsuficiente) {
+            const confirmacion = confirm('Existen materias primas con cantidades requeridas mayores que las disponibles en inventario. ¿Deseas continuar?');
+            if (!confirmacion) {
+                return false; // Cancelar el envío de datos
+            }
+        }
     
         actualizarVisualizacionMateriasPrimasRequeridas(materiasPrimasRequeridas);
     }
@@ -181,7 +196,7 @@ document.addEventListener("DOMContentLoaded", function() {
 function actualizarVisualizacionMateriasPrimasRequeridas(materiasPrimasRequeridas) {
     const tableBody = $('#materias-primas-table tbody');
     tableBody.empty(); // Limpiar filas existentes
-
+    
     Object.keys(materiasPrimasRequeridas).forEach(codigoMP => {
         const { cantidad, nombre } = materiasPrimasRequeridas[codigoMP];
         const cantidadEnInventario = existenciasMateriasPrimas[codigoMP] || 0; // Si no hay cantidad en inventario, se asume 0
@@ -316,73 +331,93 @@ function actualizarVisualizacionMateriasPrimasRequeridas(materiasPrimasRequerida
             }
         }
     });
+    
     $(document).ready(function() {
         // Selector para el botón de enviar (por ejemplo, un botón con id "enviarDatos")
         $('#enviarFormularioBtn').on('click', function() {
-            // Obtener los valores de los campos
-            var numeroFactura = $('#numeroFactura').val();
-            var fechaActual = $('#fechaCreacion').val();
-            var fechaEstimada = $('#fechaEntrega').val();
-            var prioridad = $('#prioridad').val();
-            var idCliente = $('#id_cliente').val();
-            var responsable = $('#Responsable').val();
+            // Validar que todos los campos necesarios estén completos
+            if (!validarCampos()) {
+                alert('Por favor completa todos los campos obligatorios.');
+                return false; // Cancelar el envío del formulario si faltan datos
+            }
+            var confirmacion = confirm("¿Estás seguro de que deseas enviar los datos?");
+    
+    // Verificar la respuesta del usuario
+            if (confirmacion) {
+                var csrftoken = getCookie('csrftoken');
+    
+                var nombreResponsable = $('#Responsable option:selected').data('nombre');
+                var prioridadSeleccionada = $('#prioridad').val();
+                var numeroFactura = $('#numeroFactura').val();
+                var fechaActual = $('#fechaCreacion').val();
+                var fechaEstimada = $('#fechaEntrega').val();
+                var prioridad = $('#prioridad').val();
+                var idCliente = $('#id_cliente').val();
+                var responsable = $('#Responsable').val();
     
             // Array para almacenar los detalles de productos
-            var detallesProductos = [];
-    
-            // Recorrer todas las filas de la tabla
-            $('#tabla-formulario tbody tr').each(function() {
-                var productoId = $(this).data('productoId');
-                var cantidad = $(this).find('.cantidad-input').val() || 1; // Valor por defecto 1 si no hay cantidad
-    
-                // Agregar cada detalle de producto al array
-                detallesProductos.push({
-                    producto_id: productoId,
-                    cantidad: cantidad
-                });
-            });
-    
-            // Objeto con todos los datos a enviar
-            var datosEnviar = {
-                numero_factura: numeroFactura,
-                fecha_actual: fechaActual,
-                fecha_estimada_entrega: fechaEstimada,
-                prioridad: prioridad,
-                id_cliente: idCliente,
-                detalles_productos: detallesProductos,
-                responsable: responsable
-            };
-
-            // Imprimir todos los datos en la consola del navegador
-            console.log('Datos a enviar:');
-            console.log('Número de Factura:', numeroFactura);
-            console.log('Fecha Actual:', fechaActual);
-            console.log('Fecha Estimada de Entrega:', fechaEstimada);
-            console.log('Prioridad:', prioridad);
-            console.log('ID del Cliente:', idCliente);
-            console.log('Detalles de Productos:');
-            console.log(detallesProductos);
-            console.log('Responsable:', responsable);
-    
-            // Enviar los datos mediante AJAX a la vista de Django
-            $.ajax({
-                url: '/ruta/a/tu/vista/',  // Reemplaza con la URL correcta de tu vista en Django
-                method: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify(datosEnviar),
-                success: function(response) {
-                    // Manejar la respuesta de la vista si es necesario
-                    alert('Datos almacenados correctamente.');
-                    // Puedes redirigir o realizar otras acciones después de almacenar los datos
-                },
-                error: function(xhr, status, error) {
-                    alert('Error al almacenar los datos: ' + error);
-                }
+                var detallesProductos = [];
+        
+                // Recorrer todas las filas de la tabla
+                $('#tabla-formulario tbody tr').each(function() {
+                    var productoId = $(this).data('productoId');
+                    var cantidad = $(this).find('.cantidad-input').val() || 1; // Valor por defecto 1 si no hay cantidad
+        
+                    // Agregar cada detalle de producto al array
+                    detallesProductos.push({
+                        producto_id: productoId,
+                        cantidad: cantidad
+                    });
+                    });
+        
+                    // Objeto con todos los datos a enviar
+                    var datosEnviar = {
+                        numero_factura: numeroFactura,
+                        fecha_actual: fechaActual,
+                        fecha_estimada_entrega: fechaEstimada,
+                        prioridad: prioridadSeleccionada,
+                        id_cliente: idCliente,
+                        responsable: nombreResponsable,
+                        detallesProductos : detallesProductos,
+                    };
+            
+                    // Imprimir todos los datos en la consola del navegador (opcional)
+                    console.log('Datos a enviar:');
+                    console.log('Número de Factura:', numeroFactura);
+                    console.log('Fecha Actual:', fechaActual);
+                    console.log('Fecha Estimada de Entrega:', fechaEstimada);
+                    console.log('Prioridad:', prioridadSeleccionada);
+                    console.log('ID del Cliente:', idCliente);
+                    console.log('Detalles de Productos:');
+                    console.log(detallesProductos);
+                    console.log('Responsable:', nombreResponsable);
+            
+                    // Enviar los datos mediante AJAX a la vista de Django
+                    $.ajax({
+                        url: ordenProduccion,  // Reemplaza con la URL correcta de tu vista en Django
+                        method: 'POST',
+                        headers: { "X-CSRFToken": csrftoken },
+                        contentType: 'application/json',
+                        data: JSON.stringify(datosEnviar),  // Convertir datosEnviar a JSON
+                        success: function(response) {
+                            // Manejar la respuesta de la vista si es necesario
+                            alert('Datos almacenados correctamente.');
+                            location.reload(); 
+                        },
+                        error: function(xhr, status, error) {
+                            alert('Error al almacenar los datos: ' + error);
+                        }
+                    });
+                    } else {
+                    // Cancelar el envío de datos si el usuario cancela la confirmación
+                    return false;
+                    }
             });
         });
-    });
+    
     
 });
+
 
 function obtenerFechaActual() {
     // Obtener la fecha y hora actuales en UTC
@@ -395,4 +430,49 @@ function obtenerFechaActual() {
     var fechaColombia = new Date(fechaActual.getTime() + offsetColombia * 60 * 1000);
 
     return fechaColombia;
+}
+
+function validarCampos() {
+    // Verificar que todos los campos obligatorios estén completos
+    var camposCompletos = true;
+
+    // Ejemplo de validación para campos obligatorios, ajusta según tu formulario
+    if ($('#numeroFactura').val() === '') {
+        camposCompletos = false;
+    }
+
+    if ($('#fechaCreacion').val() === '') {
+        camposCompletos = false;
+    }
+
+    if ($('#fechaEntrega').val() === '') {
+        camposCompletos = false;
+    }
+
+    if ($('#id_cliente').val() === '') {
+        camposCompletos = false;
+    }
+
+    if ($('#Responsable').val() === '') {
+        camposCompletos = false;
+    }
+
+    // Aquí puedes agregar más validaciones según los campos necesarios
+
+    return camposCompletos;
+}
+function getCookie(name) {
+    var cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = cookies[i].trim();
+            // Verificar si la cookie comienza con el nombre deseado
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
 }

@@ -1,0 +1,45 @@
+{% extends "dashboard.html" %}
+{% load static%}
+
+{%block titulohoja%}
+	<h2 class="titulo">Ordenes en Curso</h2>
+{%endblock%}
+
+{% block title %}
+    <title>Ordenes Produccion</title>
+{% endblock title %}
+
+
+
+
+{% block areatrabajo %}
+<link rel="stylesheet" href="{% static 'orden_curso.css' %}">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="{% static 'pedidos.js' %}"></script>
+
+
+<div class= "tabla">
+    <table class="table" id="tabla-formulario">
+        <thead class="table">
+            <tr class="encabezado">
+                <td>Id Pedido</td>
+                <td>Cliente</td>
+                <td>Fecha de Entrega</td>
+                <td>Prioridad</td>
+                <td></td>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+        </tbody>
+    </table>	
+</div>
+
+{% endblock areatrabajo %}

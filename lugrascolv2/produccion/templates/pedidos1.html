@@ -13,6 +13,7 @@
     <script>
         var obtenerorden = "{% url 'obtener_numero_produccion'%}"
         var materiasprimas ="{% url 'obtenerMateriasPrimas'%}"
+		var ordenProduccion = "{% url 'ordenProduccion'%}"
     </script>
     <link rel="stylesheet" href="{% static 'pedidos.css' %}">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
@@ -66,9 +67,9 @@
                     <div class="Prioridad">
                         <label for="">Prioridad</label>
                         <select name="prioridad" id="prioridad">
-                            <option value="">No Urgente</option>
-                            <option value="">Menos Urgente</option>
-                            <option value="">Urgente</option>
+                            <option value="no urgente">No Urgente</option>
+                            <option value="menos urgente">Menos Urgente</option>
+                            <option value="urgente">Urgente</option>
                         </select>
                         
                     </div>
@@ -172,7 +173,7 @@
 						<select name="responsable" id="Responsable" class="responsable-select">
 							<option value="">Responsable</option>
 							{%for usuario in usuarios%}
-								<option value="{{usuario.id}}">{{usuario.username}}</option>
+								<option value="{{usuario.id}}" data-nombre="{{ usuario.username }}">{{usuario.username}}</option>
 							{%endfor%}
 						</select>
 					</div>
