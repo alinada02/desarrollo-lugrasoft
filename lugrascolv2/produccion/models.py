@@ -70,3 +70,18 @@ class Proveedores(models.Model):
     class Meta:
         managed = False
         db_table = 'proveedores'
+
+class TransaccionOrden(models.Model):
+    fecha_entrega = models.DateField(db_column='fecha_Entrega')  # Field name made lowercase.
+    estado = models.TextField()
+    cod_inventario = models.ForeignKey('Inventario', models.DO_NOTHING, db_column='cod_inventario')
+    cantidad = models.IntegerField()
+    id_orden = models.ForeignKey(OrdenProduccion, models.DO_NOTHING, db_column='id_orden')
+    prioridad = models.TextField()
+    fecha_creacion = models.DateField()
+    responsable = models.TextField()
+    
+
+    class Meta:
+        managed = False
+        db_table = 'Transaccion_orden'

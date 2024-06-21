@@ -596,3 +596,6 @@ span.select2-selection.select2-selection--single {
 .hidden {
     display: none;
 }
+.inventario-insuficiente {
+    background-color: #ffe6e6; /* Cambia el color de fondo a rojo claro o el que prefieras */
+}

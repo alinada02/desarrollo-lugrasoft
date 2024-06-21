@@ -61,6 +61,7 @@ document.addEventListener("DOMContentLoaded", function() {
                         materiasPrimas.forEach(mp => {
                             const codigoMP = mp.codigo;
                             const cantidadMP = mp.cantidad_requerida;
+                            const nombreMP = mp.nombre;
 
                             if (materiasPrimasRequeridas[codigoMP]) {
                                 // Si la materia prima ya está en el registro, sumar la cantidad requerida
@@ -92,7 +93,11 @@ document.addEventListener("DOMContentLoaded", function() {
                         });
                         opcionesCell.append(deleteButton);
 
-                        newRow.append(idCell, nombreCell, cantidadCell, opcionesCell).attr('data-producto-id', productoId);
+                        newRow.attr({
+                            'data-producto-id': productoId,
+                            'data-producto-nombre': productoNombre
+                        });
+                        newRow.append(idCell, nombreCell, cantidadCell, opcionesCell);
 
                         $('#tabla-formulario tbody').append(newRow);
                         updateInfoContainers();
@@ -127,12 +132,12 @@ document.addEventListener("DOMContentLoaded", function() {
     function updateInfoContainers() {
         // Reiniciar el objeto de cantidades requeridas de materias primas
         const materiasPrimasRequeridas = {};
-
+    
         // Iterar sobre todas las filas de la tabla
         $('#tabla-formulario tbody tr').each(function() {
             const productoId = $(this).data('productoId');
             const cantidad = $(this).find('.cantidad-input').val() || 1; // Si no hay cantidad, se asume 1
-
+    
             // Actualizar cantidades requeridas de materias primas para este producto
             $.ajax({
                 url: materiasprimas, // Asegúrate de que esta URL coincide con tu configuración de Django
@@ -141,20 +146,24 @@ document.addEventListener("DOMContentLoaded", function() {
                 success: function(response) {
                     if (response.success) {
                         const materiasPrimas = response.materias_primas;
-
+    
                         materiasPrimas.forEach(mp => {
                             const codigoMP = mp.codigo;
                             const cantidadRequerida = mp.cantidad_requerida * cantidad;
-
+                            const nombreMP = mp.nombre;
+    
                             if (materiasPrimasRequeridas[codigoMP]) {
                                 // Si la materia prima ya está en el registro, sumar la cantidad requerida
-                                materiasPrimasRequeridas[codigoMP] += cantidadRequerida;
+                                materiasPrimasRequeridas[codigoMP].cantidad += cantidadRequerida;
                             } else {
                                 // Si no está en el registro, asignar la cantidad requerida
-                                materiasPrimasRequeridas[codigoMP] = cantidadRequerida;
+                                materiasPrimasRequeridas[codigoMP] = {
+                                    cantidad: cantidadRequerida,
+                                    nombre: nombreMP
+                                };
                             }
                         });
-
+    
                     } else {
                         alert('Error: ' + response.error);
                     }
@@ -164,22 +173,42 @@ document.addEventListener("DOMContentLoaded", function() {
                 }
             });
         });
-
+    
         actualizarVisualizacionMateriasPrimasRequeridas(materiasPrimasRequeridas);
     }
 
-    function actualizarVisualizacionMateriasPrimasRequeridas(materiasPrimasRequeridas) {
-        const tableBody = $('#materias-primas-table tbody');
-        tableBody.empty(); // Limpiar filas existentes
-    
-        Object.keys(materiasPrimasRequeridas).forEach(codigoMP => {
-            const cantidadRequerida = materiasPrimasRequeridas[codigoMP];
-            const cantidadEnInventario = existenciasMateriasPrimas[codigoMP] || 'No disponible';
-    
-            const rowHtml = `<tr><td>${codigoMP}</td><td>${cantidadRequerida}</td><td>${cantidadEnInventario}</td></tr>`;
-            tableBody.append(rowHtml);
-        });
-    }
+
+function actualizarVisualizacionMateriasPrimasRequeridas(materiasPrimasRequeridas) {
+    const tableBody = $('#materias-primas-table tbody');
+    tableBody.empty(); // Limpiar filas existentes
+
+    Object.keys(materiasPrimasRequeridas).forEach(codigoMP => {
+        const { cantidad, nombre } = materiasPrimasRequeridas[codigoMP];
+        const cantidadEnInventario = existenciasMateriasPrimas[codigoMP] || 0; // Si no hay cantidad en inventario, se asume 0
+        
+        
+        const rowHtml = `<tr>
+                            <td>${codigoMP}</td>
+                            <td>${nombre}</td>
+                            <td>${cantidad}</td>
+                            <td>${cantidadEnInventario}</td>
+                        </tr>`;
+
+        // Agregar la fila a la tabla
+        tableBody.append(rowHtml);
+
+        // Obtener la fila recién agregada para resaltarla si es necesario
+        const newRow = tableBody.find('tr:last');
+
+        // Verificar si la cantidad requerida es mayor que la cantidad en inventario
+        if (cantidad > cantidadEnInventario) {
+            newRow.addClass('inventario-insuficiente');
+        } else {
+            newRow.removeClass('inventario-insuficiente');
+        }
+    });
+}
+
     
     function obtenerExistenciasHtml(productoId) {
         let existenciasHtml = '';
@@ -287,6 +316,72 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         }
     });
+    $(document).ready(function() {
+        // Selector para el botón de enviar (por ejemplo, un botón con id "enviarDatos")
+        $('#enviarFormularioBtn').on('click', function() {
+            // Obtener los valores de los campos
+            var numeroFactura = $('#numeroFactura').val();
+            var fechaActual = $('#fechaCreacion').val();
+            var fechaEstimada = $('#fechaEntrega').val();
+            var prioridad = $('#prioridad').val();
+            var idCliente = $('#id_cliente').val();
+            var responsable = $('#Responsable').val();
+    
+            // Array para almacenar los detalles de productos
+            var detallesProductos = [];
+    
+            // Recorrer todas las filas de la tabla
+            $('#tabla-formulario tbody tr').each(function() {
+                var productoId = $(this).data('productoId');
+                var cantidad = $(this).find('.cantidad-input').val() || 1; // Valor por defecto 1 si no hay cantidad
+    
+                // Agregar cada detalle de producto al array
+                detallesProductos.push({
+                    producto_id: productoId,
+                    cantidad: cantidad
+                });
+            });
+    
+            // Objeto con todos los datos a enviar
+            var datosEnviar = {
+                numero_factura: numeroFactura,
+                fecha_actual: fechaActual,
+                fecha_estimada_entrega: fechaEstimada,
+                prioridad: prioridad,
+                id_cliente: idCliente,
+                detalles_productos: detallesProductos,
+                responsable: responsable
+            };
+
+            // Imprimir todos los datos en la consola del navegador
+            console.log('Datos a enviar:');
+            console.log('Número de Factura:', numeroFactura);
+            console.log('Fecha Actual:', fechaActual);
+            console.log('Fecha Estimada de Entrega:', fechaEstimada);
+            console.log('Prioridad:', prioridad);
+            console.log('ID del Cliente:', idCliente);
+            console.log('Detalles de Productos:');
+            console.log(detallesProductos);
+            console.log('Responsable:', responsable);
+    
+            // Enviar los datos mediante AJAX a la vista de Django
+            $.ajax({
+                url: '/ruta/a/tu/vista/',  // Reemplaza con la URL correcta de tu vista en Django
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(datosEnviar),
+                success: function(response) {
+                    // Manejar la respuesta de la vista si es necesario
+                    alert('Datos almacenados correctamente.');
+                    // Puedes redirigir o realizar otras acciones después de almacenar los datos
+                },
+                error: function(xhr, status, error) {
+                    alert('Error al almacenar los datos: ' + error);
+                }
+            });
+        });
+    });
+    
 });
 
 function obtenerFechaActual() {

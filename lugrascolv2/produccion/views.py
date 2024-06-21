@@ -1,7 +1,7 @@
 from urllib import request
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
-from .models import Clientes, Inventario, OrdenProduccion, Transformulas
+from .models import Clientes, Inventario, OrdenProduccion, Transformulas, TransaccionOrden
 from django.db.models import Max, F
 from django.contrib.auth.models import User
 
@@ -91,3 +91,46 @@ def obtener_materias_primas(request):
 
 
 
+def crear_transaccion_orden(request):
+    if request.method == 'POST':
+        # Obtener los datos enviados desde el frontend
+        datosEnviar = request.POST  # Ajusta según cómo se envían los datos desde el frontend
+
+        # Extraer los datos específicos
+        numero_factura = datosEnviar.get('numero_factura')
+        fecha_actual = datosEnviar.get('fecha_actual')
+        fecha_estimada_entrega = datosEnviar.get('fecha_estimada_entrega')
+        prioridad = datosEnviar.get('prioridad')
+        id_cliente = datosEnviar.get('id_cliente')
+        detalles_productos = datosEnviar.getlist('detalles_productos[]')  # Ajusta según el nombre de tu campo de lista
+        responsable = datosEnviar.get('responsable')
+
+        try:
+            # Crear la instancia de TransaccionOrden
+            transaccion_orden = TransaccionOrden.objects.create(
+                id_orden=numero_factura,
+                fecha_creacion=fecha_actual,
+                fecha_entrega=fecha_estimada_entrega,
+                prioridad=prioridad,
+                nit=id_cliente,
+                responsable=responsable
+            )
+
+            # Agregar los detalles de productos a los campos existentes en el modelo TransaccionOrden
+            for detalle in detalles_productos:
+                producto_id = detalle.get('producto_id')
+                cantidad = detalle.get('cantidad')
+
+                # Aquí actualizamos los campos existentes en la instancia de TransaccionOrden
+                setattr(transaccion_orden, f'producto_{producto_id}_cantidad', cantidad)
+                setattr(transaccion_orden, f'producto_{producto_id}_estado', detalle.get('estado', ''))
+                setattr(transaccion_orden, f'producto_{producto_id}_fecha_entrega', detalle.get('fecha_entrega', None))
+
+            # Guardar la instancia de TransaccionOrden con los detalles de productos añadidos
+            transaccion_orden.save()    
+            return JsonResponse({'message': 'Transacción creada correctamente'}, status=201)
+
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=400)
+
+    return JsonResponse({'error': 'Método no permitido'}, status=405)
