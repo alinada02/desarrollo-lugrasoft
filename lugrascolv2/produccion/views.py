@@ -2,10 +2,14 @@ import json
 from urllib import request
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+
+
 from .models import Clientes, Inventario, OrdenProduccion, Transformulas, TransaccionOrden
 from django.db.models import Max, F
 from django.contrib.auth.models import User
 from django.db import transaction
+from django.db.models import Case, When, IntegerField, Value, CharField,Min
+from .models import TransaccionOrden
 
 # Create your views here.
 def pedido(request):
@@ -146,9 +150,58 @@ def crear_transaccion_orden(request):
 
 # vistas para manejar la ventana orden de pedidos en curso
 def ver_orden_en_curso(request):
-    orden_curso = TransaccionOrden.objects.all();
-    cliente = Clientes.objects.all();
-    pedido = OrdenProduccion.objects.all();
-    return render(request, 'orden_en_curso.html', {'ordenes': orden_curso,'clientes': cliente, 'pedido': pedido})
+        subquery = TransaccionOrden.objects.values('id_orden').annotate(
+        min_fecha_entrega=Min('fecha_entrega')
+        )
+    
+        transacciones = TransaccionOrden.objects.filter(
+            id__in=subquery.values('id'),
+        ).annotate(
+            prioridad_order=Case(
+                When(prioridad='urgente', then=Value(1)),
+                When(prioridad='menos urgente', then=Value(2)),
+                default=Value(3),
+                output_field=CharField(),
+            )
+        ).order_by(
+            'prioridad_order', 'id_orden', 'fecha_entrega'
+        ).distinct('prioridad_order', 'id_orden', 'fecha_entrega')
+
+        context = {
+            'transacciones': transacciones,
+        }
+        return render(request, 'orden_en_curso.html', context)
 
 
+
+
+def detalles_orden(request, id_orden):
+    try:
+        detalles = TransaccionOrden.objects.filter(id_orden = id_orden)
+
+        
+        detalle_list = []
+        for detalle in detalles:
+            cod_inventario = detalle.cod_inventario.cod_inventario if detalle.cod_inventario else None 
+            
+            if cod_inventario:
+                # Consultar el nombre correspondiente al cod_inventario en el modelo Inventario
+                inventario_obj = Inventario.objects.filter(cod_inventario=cod_inventario).first()
+                if inventario_obj:
+                    nombre_inventario = inventario_obj.nombre
+            
+            detalle_data = {
+                'cod_inventario': cod_inventario,
+                'nombre':nombre_inventario,
+                'cantidad': detalle.cantidad,
+                'fecha_entrega': detalle.fecha_entrega,
+                'prioridad': detalle.prioridad,
+                'responsable': detalle.responsable,
+            }
+            detalle_list.append(detalle_data)
+            # Devolver los datos como una respuesta JSON
+        return JsonResponse({'detalles': detalle_list})
+
+    except Exception as e:
+        # Manejar cualquier error y devolver una respuesta de error
+        return JsonResponse({'error': str(e)}, status=500)

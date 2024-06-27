@@ -13,11 +13,16 @@
 
 
 {% block areatrabajo %}
+<script>
+    var DetalleOrden = "{% url 'DetalleOrden' 0%}"
+    var VerMateriasPrimas = "{%url 'obtenerMateriasPrimas'%}"
+</script>
+
 <link rel="stylesheet" href="{% static 'orden_curso.css' %}">
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-<script src="{% static 'pedidos.js' %}"></script>
+<script src="{% static 'orden_en_curso.js' %}"></script>
 
 
 <div class= "tabla">
@@ -32,14 +37,72 @@
             </tr>
         </thead>
         <tbody>
-            <tr>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
+            {% for transaccion in transacciones %}
+            <tr class="fila-transaccion" data-id="{{ transaccion.id_orden.id_orden }}"></tr>
+                <td>{{ transaccion.id_orden.id_orden}}</td> 
+                <td>{{ transaccion.id_orden.nit.nombre }}</td> 
+                <td>{{ transaccion.fecha_entrega }}</td>
+                <td>{{ transaccion.prioridad }}</td>
+                <td>
+                    <a href="{% url 'DetalleOrden' transaccion.id_orden.id_orden %}" title="Ver Detalles" class="open-modal" data-id="{{ transaccion.id_orden.id_orden }}"><i class="bi bi-eye"></i></a>
+                    <a href="" title="Producir"><i class="bi bi-gear"></i></a>
+                    <a href="" title="Enviar a Facturacion"><i class="bi bi-cart-check"></i></a>
+                </td>
             </tr>
+            {% endfor %}
         </tbody>
     </table>	
+</div>
+
+
+<div id="modalDetalleOrden" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h1>Detalle de Orden</h1>
+        <div class="tab-container">
+            <div class="tab-buttons">
+                <button class="tab-button active" data-tab="tabla-content">Elementos de la Orden</button>
+                <button class="tab-button" data-tab="totales-content">Materias primas totales</button>
+            </div>
+            <div class="tab-content" id="tabla-content">
+                <div id="detallesOrden" class="tabla">
+                    <table class="table" id="tabla-detalles">
+                        <thead>
+                            <tr class="encabezado">
+                                <th>Código</th>
+                                <th>Nombre</th>
+                                <th>Cantidad</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="tab-content hidden" id="totales-content">
+                <div class="totales-container">
+                    <div class=" containertabla">
+                        <div class= "tabla">
+                            <div id="materias-primas-totales">
+                                <table class="table"  id="materias-primas-table">
+                                    <thead class="table">
+                                        <tr class="encabezado">
+                                            <td>Código</td>
+                                            <td>Nombre</td>
+                                            <td>Cantidad Requerida Total</td>
+                                            <td>Disponible en Inventario</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- Filas de tabla serán agregadas dinámicamente desde JavaScript -->
+                                    </tbody>
+                                </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+    </div>  
 </div>
 
 {% endblock areatrabajo %}
