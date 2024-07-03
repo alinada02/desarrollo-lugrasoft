@@ -80,8 +80,19 @@ class TransaccionOrden(models.Model):
     prioridad = models.TextField()
     fecha_creacion = models.DateField()
     responsable = models.TextField()
+    fecha_terminacion_orden = models.DateField(blank=True, null=True)
     
 
     class Meta:
         managed = False
         db_table = 'Transaccion_orden'
+
+class SalidasMpOrden(models.Model):
+    cod_inventario = models.ForeignKey('Inventario', models.DO_NOTHING, db_column='cod_inventario')
+    cantidad = models.IntegerField()
+    id_orden = models.ForeignKey(OrdenProduccion, models.DO_NOTHING, db_column='id_orden')
+    fecha_e_produccion = models.DateField(db_column='fecha_E_produccion', blank=True, null=True)  # Field name made lowercase.
+
+    class Meta:
+        managed = False
+        db_table = 'Salidas_Mp_Orden'

@@ -155,3 +155,78 @@ a{
 .inventario-insuficiente {
     background-color: #ffe6e6; /* Cambia el color de fondo a rojo claro o el que prefieras */
 }
+/* Estilos para la cabecera del modal */
+.cabeceraModal {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid #ccc;
+}
+
+.cabeceraModal h1 {
+    margin: 0; /* Eliminar el margen predeterminado del h1 */
+}
+
+.btn-facturacion {
+    display: flex;
+    align-items: center; /* Alinear los elementos verticalmente */
+    gap: 8px; /* Espacio entre los botones */
+}
+
+.btn-facturacion button {
+    padding: 8px 12px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    background-color: #4CAF50;
+    color: white;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+}
+
+.btn-facturacion button:hover {
+    background-color: #137916; /* Cambio de color de fondo al pasar el ratón */
+}
+
+.bi {
+    /* Estilos básicos para los iconos de Bootstrap Icons */
+    vertical-align: text-bottom;
+    margin-left: 5px; /* Espacio a la izquierda del icono */
+}
+.responsable{
+    font-size: 1.5rem; /* Tamaño de fuente más grande */
+    font-weight: bold; /* Texto en negrita */
+    color: #333; /* Color de texto oscuro */
+    text-transform: uppercase; /* Convertir texto a mayúsculas */
+    letter-spacing: 1px; /* Espaciado entre letras */
+
+}
+span{
+    color: #4CAF50 ;
+}
+
+#estadoactual{
+    font-size: 10px;
+    color: #4CAF50;
+    
+
+
+}
+#estado{
+    font-size: 16px;
+    text-transform: uppercase;
+    margin-top: 2px;
+    margin-bottom: 4px;
+    color:#4CAF50;
+    
+
+}
+.campoestado {
+    display: flex;
+    flex-direction: column; /* Cambiamos la dirección a columna */
+    align-items: flex-end; /* Alineamos al final del eje transversal (vertical) */
+}
+.campoestado label {
+    margin-bottom: 2px; /* Espacio entre el label y el h4 */
+}

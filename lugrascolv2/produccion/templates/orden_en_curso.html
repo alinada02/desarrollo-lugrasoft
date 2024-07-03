@@ -16,6 +16,8 @@
 <script>
     var DetalleOrden = "{% url 'DetalleOrden' 0%}"
     var VerMateriasPrimas = "{%url 'obtenerMateriasPrimas'%}"
+    var Producir = "{% url 'producir'%}"
+    var IrAFacturar = "{% url 'ir_a_facturar' %}"
 </script>
 
 <link rel="stylesheet" href="{% static 'orden_curso.css' %}">
@@ -45,8 +47,7 @@
                 <td>{{ transaccion.prioridad }}</td>
                 <td>
                     <a href="{% url 'DetalleOrden' transaccion.id_orden.id_orden %}" title="Ver Detalles" class="open-modal" data-id="{{ transaccion.id_orden.id_orden }}"><i class="bi bi-eye"></i></a>
-                    <a href="" title="Producir"><i class="bi bi-gear"></i></a>
-                    <a href="" title="Enviar a Facturacion"><i class="bi bi-cart-check"></i></a>
+                    
                 </td>
             </tr>
             {% endfor %}
@@ -58,7 +59,22 @@
 <div id="modalDetalleOrden" class="modal">
     <div class="modal-content">
         <span class="close">&times;</span>
-        <h1>Detalle de Orden</h1>
+        <div class="cabeceraModal">
+            <h1>Detalle de Orden</h1>
+            
+            <div class="btn-facturacion">
+                <button type="submit" id="bt-producir" data-id="{{ transaccion.id_orden.id_orden }}">Producir <i class="bi bi-gear"></i></button>
+                <button type="submit" id="bt-facturacion" data-id="{{ transaccion.id_orden.id_orden }}">Enviar a Facturación <i class="bi bi-cash"></i></button>
+            </div>
+        </div>
+        <div>
+            <h4 class="responsable">Responsable de etiquetado:  <span id="responsableEtiquetado"></span></h4>
+        </div>
+        <div class="campoestado">
+            <label for="estadoactual">Estado de la Orden</label>
+            <h4 id="estado"></h4>
+            
+        </div>
         <div class="tab-container">
             <div class="tab-buttons">
                 <button class="tab-button active" data-tab="tabla-content">Elementos de la Orden</button>
@@ -104,5 +120,7 @@
             </div>
     </div>  
 </div>
+
+
 
 {% endblock areatrabajo %}

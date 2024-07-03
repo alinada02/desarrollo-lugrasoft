@@ -4,7 +4,7 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
 
-from .models import Clientes, Inventario, OrdenProduccion, Transformulas, TransaccionOrden
+from .models import Clientes, Inventario, OrdenProduccion, Transformulas, TransaccionOrden, SalidasMpOrden
 from django.db.models import Max, F
 from django.contrib.auth.models import User
 from django.db import transaction
@@ -197,6 +197,7 @@ def detalles_orden(request, id_orden):
                 'fecha_entrega': detalle.fecha_entrega,
                 'prioridad': detalle.prioridad,
                 'responsable': detalle.responsable,
+                'estado': detalle.estado,
             }
             detalle_list.append(detalle_data)
             # Devolver los datos como una respuesta JSON
@@ -205,3 +206,117 @@ def detalles_orden(request, id_orden):
     except Exception as e:
         # Manejar cualquier error y devolver una respuesta de error
         return JsonResponse({'error': str(e)}, status=500)
+    
+    
+def actualizar_inventario(cod_inventario, cantidad_requerida):
+    try:
+        # Obtener el objeto Inventario correspondiente al código de inventario
+        inventario = Inventario.objects.get(cod_inventario=cod_inventario)
+        
+        # Actualizar la cantidad en el inventario
+        inventario.cantidad -= cantidad_requerida
+        inventario.save()
+
+        return True
+    except Inventario.DoesNotExist:
+        return False
+    except Exception as e:
+        # Manejar cualquier otro tipo de error
+        print(f"Error al actualizar inventario: {str(e)}")
+        return False
+
+def producir(request):
+    if request.method == 'POST':
+        datos_materias_primas = request.POST.get('materias_primas_totales')
+        idOrden = request.POST.get('id_orden')
+        estado = request.POST.get('CambiarEstado', 'en proceso')
+        fechaActual = request.POST.get('fecha')
+        print('fecha actual:' , fechaActual)
+
+        try:
+            # Convertir el JSON a un objeto Python
+            materias_primas = json.loads(datos_materias_primas)
+            orden = json.loads(idOrden)
+            
+            
+            
+            transacciones = TransaccionOrden.objects.filter(id_orden=idOrden)
+            
+            # Iterar sobre las transacciones y actualizar el estado
+            for transaccion in transacciones:
+                transaccion.estado = estado
+                transaccion.save()
+            
+            
+            
+            
+            
+            
+            obj_orden = get_object_or_404(OrdenProduccion , pk=orden)
+
+            for codigo, materia_prima in materias_primas.items():
+                cantidad_requerida = materia_prima['cantidadRequerida']
+
+                # Aquí debes obtener el objeto 'Inventario' correspondiente al 'codigo'
+                # Puedes hacerlo dependiendo de cómo esté definida tu relación ForeignKey
+                # Por ejemplo:
+                cod_inventario = Inventario.objects.get(cod_inventario=codigo)
+
+                # Crear una instancia de SalidasMpOrden y guardarla
+                salida_mp_orden = SalidasMpOrden(
+                    cod_inventario=     cod_inventario,
+                    cantidad=cantidad_requerida,
+                    id_orden=obj_orden,  # Asegúrate de que 'idOrden' sea válido
+                    fecha_e_produccion = fechaActual,
+                )
+                salida_mp_orden.save()
+                
+                # Actualizar el inventario correspondiente
+                actualizado = actualizar_inventario(codigo, cantidad_requerida)
+                if not actualizado:
+                    return JsonResponse({'error': f'Error al actualizar inventario para el código {codigo}.'}, status=500)
+
+
+            return JsonResponse({'message': 'Datos recibidos y almacenados correctamente.'})
+        
+        except json.JSONDecodeError as e:
+            return JsonResponse({'error': 'Error al decodificar los datos JSON.'}, status=400)
+        
+    return JsonResponse({'error': 'Método no permitido.'}, status=400)
+
+
+
+
+def irAfacturar (request):
+    if request.method == 'POST':
+        idOrden = request.POST.get('id_orden')
+        estado = request.POST.get('CambiarEstado', 'por facturar')
+        fechaActual = request.POST.get('fecha')
+        print('fecha actual:' , fechaActual)
+
+        try:
+            # Filtrar las transacciones relacionadas con la orden
+            transacciones = TransaccionOrden.objects.filter(id_orden=idOrden)
+
+            # Iterar sobre las transacciones y actualizar el estado
+            for transaccion in transacciones:
+                transaccion.estado = estado
+                transaccion.fecha_terminacion_orden = fechaActual
+                transaccion.save()
+                
+
+                # Obtener el cod_inventario y cantidad de la transacción
+                cod_inventario = transaccion.cod_inventario.cod_inventario
+                cantidad = transaccion.cantidad
+
+                # Actualizar el inventario correspondiente
+                inventario = get_object_or_404(Inventario, cod_inventario=cod_inventario)
+                inventario.cantidad += cantidad
+                inventario.save()
+
+            return JsonResponse({'message': 'Datos recibidos y almacenados correctamente.'})
+        
+        except json.JSONDecodeError as e:
+            return JsonResponse({'error': 'Error al decodificar los datos JSON.'}, status=400)
+        
+    return JsonResponse({'error': 'Método no permitido.'}, status=400)

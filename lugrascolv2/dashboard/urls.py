@@ -7,5 +7,4 @@ urlpatterns = [
     path('validado/', Validar_Credenciales, name= 'validar'),
     path('dash/', Dashboard, name='dashboard' ),
     path('exit', exit , name= 'exit'),
-    path('admin/', admin.site.urls, name= 'admin')
 ]
