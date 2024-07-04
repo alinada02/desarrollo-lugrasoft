@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'formulas',
     'proveedores',
     'produccion',
+    'facturacion',
     
 ]
 

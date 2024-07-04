@@ -27,4 +27,5 @@ urlpatterns = [
     path('formulas/',include('formulas.urls')),
     path('proveedor/', include('proveedores.urls')),
     path('pedidos', include('produccion.urls')),
+    path('facturacion/', include('facturacion.urls')),
 ]
