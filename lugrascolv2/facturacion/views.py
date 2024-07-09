@@ -1,11 +1,12 @@
 import json
 from django.http import JsonResponse
 from django.shortcuts import render
-from .models import Clientes
+from .models import Clientes, TransaccionFactura, TransaccionRemision, Facturas, Remisiones
 from inventario.models import Inventario
 from produccion.models import OrdenProduccion, TransaccionOrden, Transformulas
 from formulas.models import TransMp 
 from django.views.decorators.csrf import csrf_exempt
+from django.db.models import Max, F
 
 # Create your views here.
 def facturar(request):
@@ -128,7 +129,9 @@ def productos_facturar(request):
         return JsonResponse({'datos': datos})
     else:
         return JsonResponse({'error': 'Método no permitido'}, status=405)
-    
+from .models import Facturas, OrdenProduccion, TransaccionFactura, TransaccionRemision
+from django.http import JsonResponse
+import json
 
 def PFacturar(request):
     if request.method == 'POST':
@@ -137,16 +140,201 @@ def PFacturar(request):
             body_unicode = request.body.decode('utf-8')
             datos_facturacion = json.loads(body_unicode)
 
-            # Procesar los datos como desees
-            print('Datos desde JS:', datos_facturacion)
+            # Parseo de datos recibidos desde JavaScript
+            factura_numero = datos_facturacion['factura']
+            cliente = datos_facturacion['cliente']
+            direccion = datos_facturacion['direccion']
+            telefono = datos_facturacion['telefono']
+            correo = datos_facturacion['correo']
+            orden_id = datos_facturacion['orden']  # Obtener el ID de la orden
+            productos = datos_facturacion['productos']
+            incluir_iva = datos_facturacion['incluir_iva']
+            subtotal = datos_facturacion['subtotal']
+            iva = datos_facturacion['iva']
+            total = datos_facturacion['total']
+            fecha = datos_facturacion['fecha']
+
+            try:
+            
+                
+                # Crear instancia de Facturas
+                
+                
+
+
+                
+                if incluir_iva:
+                    modelo_transaccion = TransaccionFactura
+                    factura_instance, created_factura = Facturas.objects.get_or_create(
+                        nfactura=factura_numero,
+                        defaults={
+                            'fecha_facturacion': fecha,
+                            'total_factura': float(total.replace('.', '').replace(',', '.')),  # Asegurar formato correcto
+                            'id_orden_field': orden_id
+                        }
+                    )
+                else:
+                    modelo_transaccion = TransaccionRemision
+                    numero_remision = obtener_numero_remision()
+                    remision, created_remision = Remisiones.objects.get_or_create(
+                        nremision=numero_remision,
+                        defaults={
+                            'fecha_remision': fecha,
+                            'total_remision': float(total.replace('.', '').replace(',', '.')),  # Asegurar formato correcto
+                            'id_orden': orden_id
+                        }
+                    )
+
+                # Iterar sobre los productos y guardar en el modelo correspondiente
+                for producto in productos:
+                    if incluir_iva:
+                        instancia_transaccion = modelo_transaccion(
+                            nfactura=factura_instance,
+                            cod_inventario=producto['id_producto'],
+                            cantidad=int(producto['cantidad']),
+                            fecha_factura=fecha
+                        )
+                    else:
+                        instancia_transaccion = modelo_transaccion(
+                            nremision=remision,
+                            cod_inventario=producto['id_producto'],
+                            cantidad=int(producto['cantidad']),
+                            fecha_remision=fecha
+                        )
+
+                    # Guardar la instancia en la base de datos
+                    instancia_transaccion.save()   
+
+
+                
+
+            except OrdenProduccion.DoesNotExist:
+                # Manejar caso donde no se encuentra la orden de producción
+                return JsonResponse({'error': 'Orden de producción no encontrada'}, status=404)
 
             # Devolver una respuesta JSON si lo deseas
             return JsonResponse({'mensaje': 'Datos recibidos correctamente'})
 
         except json.JSONDecodeError as e:
             # Manejar el error de decodificación JSON
-            print('Error de decodificación JSON:', str(e))
-            return JsonResponse({'error': 'Datos JSON inválidos'}, status=400)
+            return JsonResponse({'error': 'Error de decodificación JSON: ' + str(e)}, status=400)
 
     # Manejar otras solicitudes o devolver un error si es necesario
     return JsonResponse({'error': 'Método de solicitud no permitido'}, status=405)
+
+
+def obtener_numero_factura(request):
+    ultima_factura = None  # Define la variable antes del bloque try
+    nueva_factura = None
+    
+    try:
+        ultima_factura = TransaccionFactura.objects.aggregate(Max('nfactura'))['nfactura__max']
+        print(ultima_factura)
+        if ultima_factura is not None:
+            ultima_factura = ultima_factura + 1
+        else:
+            nueva_factura = 100000001
+            print(nueva_factura)
+    except Exception as e:
+        print(f"Error al obtener o generar el número de ajuste: {e}")
+        nueva_factura = None
+
+    data = {'numero_factura': nueva_factura, 'ultima_factura': ultima_factura}
+    return JsonResponse(data)
+
+def obtener_numero_remision():
+    try:
+        # Obtener el número máximo de la última remisión
+        ultima_remision = Remisiones.objects.aggregate(Max('nremision'))['nremision__max']
+        
+        if ultima_remision is not None:
+            # Si hay una última remisión, calcular el siguiente número
+            nueva_remision = ultima_remision + 1
+        else:
+            # Si no hay remisiones previas, comenzar desde un número específico
+            nueva_remision = 200000001
+
+    except Exception as e:
+        print(f"Error al obtener o generar el número de remisión: {e}")
+        nueva_remision = None
+
+    # Devolver el número de la nueva remisión
+    return nueva_remision
+
+def precio_producto(request):
+    if request.method == 'GET':
+        cod_inventario = request.GET.get('codigo')
+        
+        # Lista para almacenar los datos de cada fórmula
+        datos = []
+        
+        try:
+            # Obtener la fórmula correspondiente al cod_inventario
+            formula = Transformulas.objects.get(cod_inventario=cod_inventario)
+            
+            # Calcular los valores para la fórmula
+            subtotal_costo = 0.0
+            total_costo = 0.0
+            subtotal_venta = 0.0
+            total_venta = 0.0
+            iva_costo = 0.0
+            utilidad_bruta = 0.0
+            
+            for i in range(1, 9):  # Iterar sobre los campos materia1 hasta materia8
+                campo_materia = getattr(formula, f"materia{i}")
+                if campo_materia:  # Verificar si hay un código de materia prima en el campo actual
+                    # Consultar la materia prima por su código
+                    materia_prima = TransMp.objects.filter(cod_inventario=campo_materia).order_by('-fecha_ingreso').first()
+                    if materia_prima:
+                        # Asignar el nombre y el costo unitario de la materia prima a la fórmula
+                        setattr(formula, f"nombre_mp{i}", materia_prima.nombre_mp)
+                        setattr(formula, f"costo_unitario{i}", materia_prima.costo_unitario)
+                        cantidad = getattr(formula, f"cant_materia{i}")
+                        costo_unitario = getattr(materia_prima, f"costo_unitario")
+                        subtotal_costo += cantidad * costo_unitario
+                    else:
+                        # Asignar valores predeterminados si la materia prima no se encuentra
+                        setattr(formula, f"nombre_mp{i}", "Materia prima no encontrada")
+                        setattr(formula, f"costo_unitario{i}", 0.0)
+            
+            # Calcular otros valores necesarios para la fórmula
+            iva_costo = (subtotal_costo * formula.porcentajeiva) / 100            
+            total_costo = subtotal_costo + formula.costosindirectos + iva_costo
+            utilidad_bruta = ((subtotal_costo + formula.costosindirectos) * formula.pocentajeutilidad) / 100
+            subtotal_venta = subtotal_costo + formula.costosindirectos + utilidad_bruta
+            total_venta = subtotal_venta + (subtotal_venta * formula.porcentajeiva) / 100
+            
+            # Redondear los valores a dos decimales
+            subtotal_costo = round(subtotal_costo, 2)
+            total_costo = round(total_costo, 2)
+            subtotal_venta = round(subtotal_venta, 2)
+            total_venta = round(total_venta, 2)
+            iva_costo = round(iva_costo, 2)
+            utilidad_bruta = round(utilidad_bruta, 2)
+            
+            # Crear un diccionario con los datos de la fórmula actual
+            formula_data = {
+                'id_producto': formula.cod_inventario.cod_inventario,
+                'nombre': formula.nombre,
+                'iva': formula.porcentajeiva,
+                'subtotal_costo': subtotal_costo,
+                'total_costo': total_costo,
+                'subtotal_venta': subtotal_venta,
+                'total_venta': total_venta,
+                'iva_costo': iva_costo,
+                'utilidad_bruta': utilidad_bruta,
+            }
+            
+            # Agregar el diccionario a la lista de datos
+            datos.append(formula_data)
+            
+            # Devolver los datos en formato JSON
+            return JsonResponse({'datos': datos})
+        
+        except Transformulas.DoesNotExist:
+            # Manejar el caso donde no se encontró la fórmula
+            return JsonResponse({'error': 'Fórmula no encontrada'}, status=404)
+    
+    else:
+        return JsonResponse({'error': 'Método no permitido'}, status=405)
+    

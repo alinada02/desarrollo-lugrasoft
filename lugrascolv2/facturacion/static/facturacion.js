@@ -11,7 +11,33 @@ document.addEventListener('DOMContentLoaded', function() {
         // Formatear la fecha actual como YYYY-MM-DD
         $('#fechaActual').text(fechaActual).prop('readonly', 'readonly');
         // Establecer la fecha por defecto en el campo de fecha
-    
+        var precioTotal = 0;
+        var subtotalTotal =0;
+        var ivaSobreSubtotalTotal = 0;
+
+        $.ajax({
+            url: obtenerfactura,
+            type: 'GET',
+            success: function(response) {
+                // Acceder a los datos recibidos
+                var numeroFactura = response.numero_factura;
+                var ultimaFactura = response.ultima_factura;
+        
+                // Manejar los datos según corresponda
+                if (numeroFactura) {
+                    $('.facturaN').text(numeroFactura);
+                    console.log('Nuevo ajuste:', numeroFactura);
+                }
+                if (ultimaFactura) {
+                    $('.facturaN').text(ultimaFactura);
+                } else {
+                    $('.ultimo_ajuste').text('No hay ajustes anteriores');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error en la solicitud AJAX:', error);
+            }
+        });
 
         $('#cliente').on('change', function() {
             var selectedOption = $(this).find(':selected');
@@ -73,8 +99,8 @@ document.addEventListener('DOMContentLoaded', function() {
         $('#orden').on('change', function() {
             var idOrden = $(this).val();  // Obtener el valor seleccionado (id_orden)
             var subtotal = 0;
-            var ivaSobreSubtotalTotal = 0;
-            var subtotalTotal =0;
+            
+            
         
             // Verificar si se seleccionó una opción válida
             if (idOrden) {
@@ -94,6 +120,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
                         // Verificar el estado del checkbox de IVA
                         var incluirIVA = $('#checkIva').prop('checked');
+                        
         
                         // Iterar sobre los datos recibidos y agregar filas a la tabla
                         $.each(response.datos, function(index, dato) {
@@ -121,7 +148,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         });
         
                         // Calcular Precio Total
-                        var precioTotal = incluirIVA ? (subtotalTotal + ivaSobreSubtotalTotal) : subtotalTotal;
+                        precioTotal = incluirIVA ? (subtotalTotal + ivaSobreSubtotalTotal) : subtotalTotal;
         
                         // Mostrar los valores calculados
                         $('.ValorSubtotal').text('$ ' + subtotalTotal.toLocaleString());
@@ -139,6 +166,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         $('.bt-facturar').on('click', function() {
             // Obtener datos del cliente seleccionado
+            event.preventDefault();
             
             var direccion = $('#cliente option:selected').data('direccion');
             var telefono = $('#cliente option:selected').data('telefono');
@@ -174,6 +202,7 @@ document.addEventListener('DOMContentLoaded', function() {
             var iva = $('.ValorIva').text().replace('$', '').trim();
             var ica = $('.ValorIca').text().replace('$', '').trim();
             var total = $('.Ptotal').text().replace('$', '').trim();
+            var fechaactual = $('#fechaActual').text()
     
             // Construir objeto con todos los datos
             var datosFacturacion = {
@@ -189,32 +218,160 @@ document.addEventListener('DOMContentLoaded', function() {
                 subtotal: subtotal,
                 iva: iva,
                 ica: ica,
-                total: total
+                total: total,
+                fecha : fechaactual,
             };
             console.log('datos js :', datosFacturacion)
+
+              // Mostrar la confirmación al usuario
+            if (confirm('¿Estás seguro de Facturar la orden ?')) {
+                // Si el usuario confirma, enviar el formulario
+                $.ajax({
+                    url: Facturacion,  // URL donde se procesará la solicitud en Django
+                    type: 'POST',  // Método de solicitud (POST según tu configuración en Django)
+                    headers: {
+                        'Content-Type': 'application/json',
+                        "X-CSRFToken": getCookie("csrftoken")
+                    },
+                    data: JSON.stringify(datosFacturacion),  // Datos a enviar al servidor
+                    success: function(response) {
+                        // Manejar la respuesta exitosa del servidor aquí
+                        console.log('Respuesta del servidor:', response);
+                        // Aquí podrías mostrar un mensaje de éxito o redireccionar a otra página
+                        location.reload();
+                    },
+                    error: function(xhr, status, error) {
+                        // Manejar errores de la solicitud AJAX aquí
+                        console.error('Error en la solicitud AJAX:', error);
+                    }
+                });
+                
+            } else {
+                // Si el usuario cancela, no hacer nada
+                return false;
+            }
+            
             // Realizar la solicitud AJAX para enviar los datos al servidor
+            
+        });
+         // Guardar el total original
+        
+        $('#checkIca').on('change', function() {
+            var originalPtotal = precioTotal 
+            
+            // Verificar si el checkbox está marcado o no
+            if ($(this).prop('checked')) {
+                // Calcular el 2.5% del total
+                var ica = 2.5
+                console.log('obtencion del numero Ptotal', originalPtotal)
+
+                var numeroLimpio = originalPtotal;  // Elimina todo excepto dígitos y coma
+
+                // Reemplazar la coma (,) por punto (.) como separador decimal
+                numeroLimpio = numeroLimpio;
+                console.log(numeroLimpio); 
+
+                // Convertir la cadena limpia a un número
+                var total = parseFloat(numeroLimpio);
+                console.log('total', total)
+                var valorIca = (total * ica) /100; // Calcular el 2.5%
+        
+                // Actualizar el valor de .ValorIca
+                $('.ValorIca').text('$ ' + valorIca.toLocaleString()); // Actualizar el contenido de .ValorIca con el valor calculado
+                var nuevoTotal = total - valorIca;
+                $('.Ptotal').text('$ ' + nuevoTotal.toLocaleString()); // Actualizar el contenido de .Ptotal con el nuevo total
+            } else {
+                // Si el checkbox no está marcado, establecer .ValorIca a vacío o a cero según tu caso
+                  // Restaurar el valor original de .ValorIca
+                $('.ValorIca').text('$ ');
+                $('.Ptotal').text('$ ' + originalPtotal.toLocaleString());  
+            }
+            
+        });
+        $('#Bproducto').on('change', function() {
+            var cod_inventario = $(this).val();
+            console.log('cod_inventario', cod_inventario)
+
             $.ajax({
-                url: Facturacion,  // URL donde se procesará la solicitud en Django
-                type: 'POST',  // Método de solicitud (POST según tu configuración en Django)
-                headers: {
-                    'Content-Type': 'application/json',
-                    "X-CSRFToken": getCookie("csrftoken")
+                url: precioPorProducto,  // Reemplaza por la URL correcta de tu aplicación Django
+                type: 'GET',
+                data: {
+                    codigo: cod_inventario
                 },
-                data: JSON.stringify(datosFacturacion),  // Datos a enviar al servidor
                 success: function(response) {
-                    // Manejar la respuesta exitosa del servidor aquí
-                    console.log('Respuesta del servidor:', response);
-                    // Aquí podrías mostrar un mensaje de éxito o redireccionar a otra página
+                    // Manejar la respuesta exitosa del servidor
+                    console.log('Datos recibidos:', response);
+                    
+                    // Aquí puedes actualizar la interfaz de usuario con los datos recibidos
+                    var datos = response.datos;  // Array de objetos con los datos de las fórmulas
+                    var incluirIVA = $('#checkIva').prop('checked');
+                    
+                    // Por ejemplo, podrías iterar sobre los datos para mostrarlos en tu página
+                    datos.forEach(function(formula) {
+                        console.log('ID Producto:', formula.id_producto);
+                        console.log('Nombre:', formula.nombre);
+                        console.log('IVA:', formula.iva);
+                        console.log('Subtotal Costo:', formula.subtotal_costo);
+                        console.log('Total Costo:', formula.total_costo);
+                        console.log('Subtotal Venta:', formula.subtotal_venta);
+                        console.log('Total Venta:', formula.total_venta);
+                        console.log('IVA Costo:', formula.iva_costo);
+                        console.log('Utilidad Bruta:', formula.utilidad_bruta);
+
+                        
+                        var subtotal_venta_mostrar = incluirIVA ? formula.total_venta : formula.subtotal_venta;
+                        var subtotal_venta_formateado = '$' + ' ' + subtotal_venta_mostrar.toLocaleString();
+                        var fila = '<tr>' +
+                                        '<td>' + formula.id_producto + '</td>' +
+                                        '<td>' + formula.nombre + '</td>' +
+                                        '<td><input type="int" id="campo_editable" value="" /></td>' +  // Campo editable
+                                        '<td>' + subtotal_venta_formateado+ '</td>' +
+                                        '<td> <i class="bi bi-trash" id="icono_borrar"></i></td>' +
+                                        '</tr>';
+        
+                            $('#tabla-formulario tbody').append(fila);
+                        
+                            $('#tabla-formulario tbody').on('blur', '#campo_editable', function() {
+                                var incluirIVA = $('#checkIva').prop('checked'); 
+                                if (incluirIVA) {
+                                    var nuevoValor = parseFloat($(this).val());
+                                    
+                                    var totalProducto = formula.total_venta * nuevoValor
+                                    subtotalTotal += totalProducto
+                                    var iva = totalProducto *0.19
+                                    ivaSobreSubtotalTotal += iva
+                                    
+                                } else {
+                                    var nuevoValor = parseFloat($(this).val());
+                                    
+                                    
+                                    var totalProducto = formula.subtotal_venta * nuevoValor
+                                    subtotalTotal += totalProducto
+                                    
+                                    
+                                    
+                                }
+                                precioTotal +=totalProducto
+                                // Actualizar los elementos HTML con los nuevos valores calculados
+                                $('.ValorSubtotal').text('$ ' + subtotalTotal.toLocaleString());
+                                $('.ValorIva').text(incluirIVA ? ('$ ' + ivaSobreSubtotalTotal.toLocaleString()) : '');
+                                $('.Ptotal').text('$ ' + precioTotal.toLocaleString());
+                            });
+                            
+                    });
+
+                
                 },
                 error: function(xhr, status, error) {
-                    // Manejar errores de la solicitud AJAX aquí
+                    // Manejar errores de la solicitud AJAX
                     console.error('Error en la solicitud AJAX:', error);
                 }
             });
+            
+
+
         });
-        
-        
-        
+
     
 
 });

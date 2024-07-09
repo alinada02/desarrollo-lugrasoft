@@ -15,6 +15,8 @@
     var obtenerOrdenCliente = "{%url 'obtenerOrdenCliente' %}"
     var DatosFacturacion = "{% url 'datosFacturacion'%}"
     var Facturacion = "{% url 'facturacion'%}"
+    var obtenerfactura = "{%url 'obtenerFactura'%}"
+    var precioPorProducto = "{% url 'precioxproducto'%}"
 </script>
 <link rel="stylesheet" href="{%static 'facturacion.css'%}">
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
@@ -28,7 +30,7 @@
         <div class="info-factura">
             <div class="factura">
                 <label for="NFactura" class="labelF"> # Factura</label>
-                <span class="facturaN">######</span>
+                <span class="facturaN"></span>
             </div>
             <div class="divfecha">
                 <label for="fecha" class="labelFecha">Fecha</label>
@@ -124,7 +126,7 @@
                 <label for="checkIca">ICA : </label>
             </div>
             <div>
-                <span>$ </span>
+                <span class="ValorIca">$ </span>
             </div>
             
         </div>
