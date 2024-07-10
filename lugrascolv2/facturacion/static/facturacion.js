@@ -326,7 +326,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                         '<td>' + formula.nombre + '</td>' +
                                         '<td><input type="int" id="campo_editable" value="" /></td>' +  // Campo editable
                                         '<td>' + subtotal_venta_formateado+ '</td>' +
-                                        '<td> <i class="bi bi-trash" id="icono_borrar"></i></td>' +
+                                        '<td><a href="#" class="iconoBorrar"> <i class="bi bi-trash"></i></a></td>' +
                                         '</tr>';
         
                             $('#tabla-formulario tbody').append(fila);
@@ -357,7 +357,38 @@ document.addEventListener('DOMContentLoaded', function() {
                                 $('.ValorIva').text(incluirIVA ? ('$ ' + ivaSobreSubtotalTotal.toLocaleString()) : '');
                                 $('.Ptotal').text('$ ' + precioTotal.toLocaleString());
                             });
-                            
+                            $('#tabla-formulario tbody').on('click', '.iconoBorrar', function(e) {
+                                e.preventDefault();  // Prevenir el comportamiento predeterminado del enlace
+                        
+                                // Obtener la fila padre (tr) del ícono de borrado clicado
+                                var fila = $(this).closest('tr');
+
+                                // Obtener el valor del campo editable antes de eliminar la fila
+                                var valorCampoEditable = parseFloat(fila.find('#campo_editable').val());
+
+                                
+                                // Restar los valores correspondientes a los totales acumulados
+                                if ($('#checkIva').prop('checked')) {
+                                    
+                                    var totalProducto = formula.total_venta * valorCampoEditable;
+                                    subtotalTotal -= totalProducto
+                                    var iva = totalProducto * 0.19;
+                                    ivaSobreSubtotalTotal -= iva;
+                                } else {
+                                    var totalProducto = formula.subtotal_venta * valorCampoEditable;
+                                    subtotalTotal -= totalProducto;
+                                }
+                                precioTotal -= totalProducto;
+
+                                // Eliminar la fila de la tabla
+                                fila.remove();
+
+                                // Actualizar los elementos HTML con los nuevos valores calculados
+                                $('.ValorSubtotal').text('$ ' + subtotalTotal.toLocaleString());
+                                $('.ValorIva').text($('#checkIva').prop('checked') ? ('$ ' + ivaSobreSubtotalTotal.toLocaleString()) : '');
+                                $('.Ptotal').text('$ ' + precioTotal.toLocaleString());
+
+                            });
                     });
 
                 
