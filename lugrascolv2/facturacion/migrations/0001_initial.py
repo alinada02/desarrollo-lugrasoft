@@ -17,7 +17,7 @@ class Migration(migrations.Migration):
                 ('nit', models.DecimalField(db_column='Nit', decimal_places=10, max_digits=2, primary_key=True, serialize=False)),
                 ('nombre', models.TextField()),
                 ('direccion', models.TextField()),
-                ('telefono', models.DecimalField(decimal_places=65535, max_digits=65535)),
+                ('telefono', models.DecimalField(decimal_places=10, max_digits=2)),
                 ('email', models.TextField()),
             ],
             options={
