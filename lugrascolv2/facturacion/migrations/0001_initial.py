@@ -22,7 +22,7 @@ class Migration(migrations.Migration):
             ],
             options={
                 'db_table': 'Clientes',
-                'managed': False,
+                'managed': True,
             },
         ),
     ]

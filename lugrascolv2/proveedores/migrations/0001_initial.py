@@ -20,7 +20,7 @@ class Migration(migrations.Migration):
             ],
             options={
                 'db_table': 'compras',
-                'managed': False,
+                'managed': True,
             },
         ),
         migrations.CreateModel(
@@ -33,7 +33,7 @@ class Migration(migrations.Migration):
             ],
             options={
                 'db_table': 'inventario',
-                'managed': False,
+                'managed': True,
             },
         ),
         migrations.CreateModel(
@@ -46,7 +46,7 @@ class Migration(migrations.Migration):
             ],
             options={
                 'db_table': 'proveedores',
-                'managed': False,
+                'managed': True,
             },
         ),
         migrations.CreateModel(
@@ -64,7 +64,7 @@ class Migration(migrations.Migration):
             ],
             options={
                 'db_table': 'trans_mp',
-                'managed': False,
+                'managed': True,
             },
         ),
     ]

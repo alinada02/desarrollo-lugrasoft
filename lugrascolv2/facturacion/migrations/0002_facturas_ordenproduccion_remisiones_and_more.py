@@ -19,7 +19,7 @@ class Migration(migrations.Migration):
             ],
             options={
                 'db_table': 'Facturas ',
-                'managed': False,
+                'managed': True,
             },
         ),
         migrations.CreateModel(
@@ -29,7 +29,7 @@ class Migration(migrations.Migration):
             ],
             options={
                 'db_table': 'Orden_produccion',
-                'managed': False,
+                'managed': True,
             },
         ),
         migrations.CreateModel(
@@ -41,7 +41,7 @@ class Migration(migrations.Migration):
             ],
             options={
                 'db_table': 'Remisiones',
-                'managed': False,
+                'managed': True,
             },
         ),
         migrations.CreateModel(
@@ -54,7 +54,7 @@ class Migration(migrations.Migration):
             ],
             options={
                 'db_table': 'Transaccion_Factura',
-                'managed': False,
+                'managed': True,
             },
         ),
         migrations.CreateModel(
@@ -67,7 +67,7 @@ class Migration(migrations.Migration):
             ],
             options={
                 'db_table': 'Transaccion_Remision',
-                'managed': False,
+                'managed': True,
             },
         ),
     ]

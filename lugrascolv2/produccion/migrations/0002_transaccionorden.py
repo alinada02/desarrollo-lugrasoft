@@ -23,7 +23,7 @@ class Migration(migrations.Migration):
             ],
             options={
                 'db_table': 'Transaccion_orden',
-                'managed': False,
+                'managed': True,
             },
         ),
     ]

@@ -18,7 +18,7 @@ class Migration(migrations.Migration):
             ],
             options={
                 'db_table': 'ajustes',
-                'managed': False,
+                'managed': True,
             },
         ),
         migrations.CreateModel(
@@ -28,7 +28,7 @@ class Migration(migrations.Migration):
             ],
             options={
                 'db_table': 'Averias',
-                'managed': False,
+                'managed': True,
             },
         ),
         migrations.CreateModel(
@@ -41,7 +41,7 @@ class Migration(migrations.Migration):
             ],
             options={
                 'db_table': 'inventario',
-                'managed': False,
+                'managed': True,
             },
         ),
         migrations.CreateModel(
@@ -54,7 +54,7 @@ class Migration(migrations.Migration):
             ],
             options={
                 'db_table': 'proveedores',
-                'managed': False,
+                'managed': True,
             },
         ),
         migrations.CreateModel(
@@ -67,7 +67,7 @@ class Migration(migrations.Migration):
             ],
             options={
                 'db_table': 'Transaccion_ajuste',
-                'managed': False,
+                'managed': True,
             },
         ),
         migrations.CreateModel(
@@ -79,7 +79,7 @@ class Migration(migrations.Migration):
             ],
             options={
                 'db_table': 'Transaccion_averias',
-                'managed': False,
+                'managed': True,
             },
         ),
     ]
