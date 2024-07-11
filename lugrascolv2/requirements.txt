@@ -10,7 +10,7 @@ fonttools==4.53.0
 html5lib==1.1
 lxml==5.2.2
 pillow==10.3.0
-psycopg2-binary==2.9.9
+psycopg2==2.9.9
 pycparser==2.22
 pydyf==0.10.0
 pyphen==0.15.0
