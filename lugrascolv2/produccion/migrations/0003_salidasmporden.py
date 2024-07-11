@@ -19,6 +19,9 @@ class Migration(migrations.Migration):
                 ('fecha_salida', models.DateField()),
                 ('cod_inventario', models.ForeignKey(db_column='cod_inventario', on_delete=django.db.models.deletion.DO_NOTHING, to='produccion.inventario')),
             ],
-            
+            options={
+                'db_table': 'Salidas_Mp_Orden',
+                'managed': True,
+            },
         ),
     ]
