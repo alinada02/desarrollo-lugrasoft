@@ -92,12 +92,14 @@ WSGI_APPLICATION = 'lugrascolv2.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'lugrascoldb',
-        'USER': 'postgres',
-        'PASSWORD': '2204Ky05',
-        'HOST': 'localhost',
+        'NAME': 'BD_Lugrascol.pgerd',
+        'USER': 'ali_nada',
+        'PASSWORD': 'toyota',  
+        'HOST': '127.0.0.1',  # configurado al codigo de kevin
         'PORT': '5432'
     }
+
+
 }
 
 
